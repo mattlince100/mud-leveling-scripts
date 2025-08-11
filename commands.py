@@ -364,10 +364,12 @@ class Commands:
                 # Check if character is a sect member level 10+
                 if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
                     # Use secthome for sect members
+                    self.printc("DEBUG: Sect member using secthome;jig to reach DH Square from %s" % self.location, 'green')
                     self.rod.write("secthome\n")
                     self.time.sleep(2)
                     self.rod.write("jig\n")
                     self.time.sleep(2)
+                    self.printc("DEBUG: Sect member should now be at DH Square", 'green')
                 else:
                     # Debug: Print current location for Kaeval
                     if self.name in ["Kaeval", "Lemaitre"]:
