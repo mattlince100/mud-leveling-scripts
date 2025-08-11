@@ -1485,19 +1485,22 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
         if self.level >= 10 and not self.sect_member:
             self.printc("Initiating sect invitation process...", 'gold')
             
+            # Make sure character is at Darkhaven Square first
+            self.godh()
+            self.time.sleep(2)
+            
             # Log in Kaan
             self.printc("Logging in Kaan for sect invitation...", 'gold')
             kaan = self.ROD("Kaan", "Elijah", "chest", "none")
             self.time.sleep(5)
             
-            # Kaan goes to Darkhaven Square
+            # Kaan goes to sect house using secthome
             kaan.rod.write("secthome\n")
             self.time.sleep(2)
             kaan.rod.write("jig\n")
             self.time.sleep(3)
             
-            # Make sure character is at Darkhaven Square
-            self.godh()
+            # Wait a moment to ensure both characters are in same room
             self.time.sleep(2)
             
             # Kaan invites the character
@@ -1517,7 +1520,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                 # Save sect membership status
                 if "sect_member" not in self.alt_info:
                     self.alt_info["sect_member"] = True
-                    self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'w'))
+                    self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'wb'))
             else:
                 self.printc("Sect invitation may have failed, halting...", 'red')
                 kaan.quit()
@@ -1525,7 +1528,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                 self.status = "quit"
                 return False
             
-            # Kaan returns home and logs out
+            # Kaan returns to sect house and logs out
             kaan.rod.write("secthome\n")
             self.time.sleep(2)
             kaan.quit()
