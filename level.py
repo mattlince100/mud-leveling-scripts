@@ -144,6 +144,11 @@ class dhaven:
         if self.phase == 0:
 
             self.godh()
+            
+            # Check for sect invitation at level 10+
+            if self.level >= 10 and not self.sect_member:
+                if not self.handle_sect_invitation():
+                    return 'quit'  # Halt if sect invitation fails
 
             if not self.clericon:
                 self.log_cleric()
@@ -457,17 +462,15 @@ class dhaven:
                 self.status_msg  = "Getting leveling spells"
                 self.godh()
 
-                if True:
-                    self.go("nw;w;w;w")
-                #self.rod.write("say refresh\nsay level\nsay shields\nsay fly\n")
-                    #self.rod.write("say mspells\nsay cspells\n")
+                # Check if sect member - use house for spells
+                if self.level >= 10 and self.sect_member:
+                    # Already at sect house from godh(), just say spells
                     self.rod.write("say buffs!\nsay shields!\n")
                     sys.stdout.write("Waiting for level spells 30s...\n")
                     time.sleep(40)
                     self.check_affect()
-                    self.go("e;e;e;se")
-                #self.phase = 1  
                 else:
+                    # Use old location for pre-level 10
                     self.go("nw;w;w;w")
                     self.rod.write("say buffs!\nsay shields!\n")
                     sys.stdout.write("Waiting for level spells 30s...\n")
@@ -475,6 +478,33 @@ class dhaven:
                     self.check_affect()
                     self.go("e;e;e;se")
 
+            # Check sanctuary potions for sect members
+            getsancpotions = False
+            if self.level >= 10 and self.sect_member:
+                sanctpotname = "a sanctuary potion"
+                if sanctpotname in self.containers[self.container]:
+                    if self.containers[self.container][sanctpotname] < 5:
+                        getsancpotions = True
+                else:
+                    getsancpotions = True
+                    
+                if getsancpotions:
+                    self.status_msg = "Getting sanctuary potions"
+                    self.godh()
+                    # Go to potion storage room
+                    self.go("d;d;s")
+                    # Fill container with 5 sanctuary potions
+                    num_needed = 5
+                    if sanctpotname in self.containers[self.container]:
+                        num_needed = 5 - self.containers[self.container][sanctpotname]
+                    self.rod.write("fill %s %d sanctuary-potion shelf-potion\n" % (self.container, num_needed))
+                    time.sleep(2)
+                    # Return to recall room
+                    self.go("n;u;u")
+                    # Go back to Darkhaven Square
+                    self.rod.write("jig\n")
+                    time.sleep(2)
+            
             getrecall = False
             if recallname in self.containers[self.container]:
                 if self.containers[self.container][recallname] < 2:
@@ -622,10 +652,16 @@ class dhaven:
                     self.time.sleep(3)
                 else:
                     self.godh()
-                    self.go("nw;w;w;w")
-                    self.rod.write("say #sanc\n")
-                    time.sleep(10) 
-                    self.go("e;e;e;se")
+                    if self.level >= 10 and self.sect_member:
+                        # Already at sect house from godh()
+                        self.rod.write("say #sanc\n")
+                        time.sleep(10)
+                    else:
+                        # Use old location
+                        self.go("nw;w;w;w")
+                        self.rod.write("say #sanc\n")
+                        time.sleep(10) 
+                        self.go("e;e;e;se")
                 self.phase = 1
             
             self.check_affect()
@@ -638,11 +674,16 @@ class dhaven:
             if getheal and self.phase == 2:
                 self.status_msg= "Waiting for heals"
                 self.godh()
-                self.go("nw;w;w;w")
-                self.rod.write("say heal\n")
+                if self.level >= 10 and self.sect_member:
+                    # Already at sect house
+                    self.rod.write("say heal\n")
+                else:
+                    self.go("nw;w;w;w")
+                    self.rod.write("say heal\n")
                 self.sys.stdout.write("waiting for heal...\n")
                 time.sleep(5)
-                self.go("e;e;e;se")
+                if not (self.level >= 10 and self.sect_member):
+                    self.go("e;e;e;se")
 
             getfly = False
             
@@ -688,10 +729,15 @@ class dhaven:
                         self.godh()
                     else:
                         self.godh()
-                        self.go("nw;w;w;w")
-                        self.rod.write("say #fly\n")
-                        self.time.sleep(5)
-                        self.go("e;e;e;se")
+                        if self.level >= 10 and self.sect_member:
+                            # Already at sect house
+                            self.rod.write("say #fly\n")
+                            self.time.sleep(5)
+                        else:
+                            self.go("nw;w;w;w")
+                            self.rod.write("say #fly\n")
+                            self.time.sleep(5)
+                            self.go("e;e;e;se")
                     
                 
                     self.phase = 1

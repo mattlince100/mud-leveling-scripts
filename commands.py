@@ -361,38 +361,46 @@ class Commands:
             elif  self.location == "Darkhaven Square":
                 pass
             else:
-                # Debug: Print current location for Kaeval
-                if self.name in ["Kaeval", "Lemaitre"]:
-                    self.printc("KAEVAL RECALL DEBUG: Currently at '%s'" % self.location, 'red')
-                if self.charclass == "Barbarian":
-                    self.rod.write("get recall my.basket\nshatter recall\n")
+                # Check if character is a sect member level 10+
+                if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                    # Use secthome for sect members
+                    self.rod.write("secthome\n")
                     self.time.sleep(2)
-                    self.go("w;n;n;nw;w;n;nw;n;w")
-                    self.time.sleep(2.5)
-                    self.rod.write("buy recall\nput recall my.basket\ne\nn\nn\nsay I wish to visit the city dwellers\ns\ndr\n")
-                    self.time.sleep(2.5)
-                elif self.name in ["Fanmal"]:
-                    self.rod.write("recite scroll\nget recall my.basket\n")
-                    self.go("s;se;sw;w;sw;sw")
-                elif self.name in ["Vanox","Adixe"]:
-                    self.printc("RECALLING %s located %s"%(self.name,self.location))
-                    self.do("recall scroll;d;d;s;s;s;ne;e;buy recall;w;sw;n;n;n;n",self.rod)
-                    self.do("e;say town;s", self.rod)
+                    self.rod.write("jig\n")
+                    self.time.sleep(2)
                 else:
-                    if self.name in ["Kaeval","Lemaitre"]:
-                        self.rod.write("c word\n")
+                    # Debug: Print current location for Kaeval
+                    if self.name in ["Kaeval", "Lemaitre"]:
+                        self.printc("KAEVAL RECALL DEBUG: Currently at '%s'" % self.location, 'red')
+                    if self.charclass == "Barbarian":
+                        self.rod.write("get recall my.basket\nshatter recall\n")
                         self.time.sleep(2)
-                        # Navigate from recall location to Darkhaven Square
-                        self.whereami()
-                        if self.location == "The Stables":
-                            self.go("e;s;s;e;se")
-                        elif self.location == "The Baptismal Font":
-                            self.go("w;w;s;s;e;se")
-                        else:
-                            self.go("w;w;s;s;e;se")
+                        self.go("w;n;n;nw;w;n;nw;n;w")
+                        self.time.sleep(2.5)
+                        self.rod.write("buy recall\nput recall my.basket\ne\nn\nn\nsay I wish to visit the city dwellers\ns\ndr\n")
+                        self.time.sleep(2.5)
+                    elif self.name in ["Fanmal"]:
+                        self.rod.write("recite scroll\nget recall my.basket\n")
+                        self.go("s;se;sw;w;sw;sw")
+                    elif self.name in ["Vanox","Adixe"]:
+                        self.printc("RECALLING %s located %s"%(self.name,self.location))
+                        self.do("recall scroll;d;d;s;s;s;ne;e;buy recall;w;sw;n;n;n;n",self.rod)
+                        self.do("e;say town;s", self.rod)
                     else:
-                        self.rod.write("recite scroll\nget recall my.basket\ns\ndr\n")
-                    self.time.sleep(2.5)
+                        if self.name in ["Kaeval","Lemaitre"]:
+                            self.rod.write("c word\n")
+                            self.time.sleep(2)
+                            # Navigate from recall location to Darkhaven Square
+                            self.whereami()
+                            if self.location == "The Stables":
+                                self.go("e;s;s;e;se")
+                            elif self.location == "The Baptismal Font":
+                                self.go("w;w;s;s;e;se")
+                            else:
+                                self.go("w;w;s;s;e;se")
+                        else:
+                            self.rod.write("recite scroll\nget recall my.basket\ns\ndr\n")
+                        self.time.sleep(2.5)
 
         self.goingback = False
 

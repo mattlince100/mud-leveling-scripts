@@ -179,8 +179,17 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             self.containers = {}
             self.gold = None
             self.eq = {}
+            self.sect_member = False  # Track sect membership status
             self.level = 0
             self.prestige = False
+            
+            # Check if previously joined sect
+            try:
+                self.alt_info = self.pickle.load(open("alts/info_%s.pckle"%self.name,'r'))
+                if "sect_member" in self.alt_info:
+                    self.sect_member = self.alt_info["sect_member"]
+            except:
+                pass
 
             # log
             self.lastmob = None
@@ -1255,6 +1264,21 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
 
             if "You cannot cast that here." in rln[i]:
                 self.usespell = False
+            
+            # Check for sanctuary fade message
+            if "The luminous aura about your body fades away." in rln[i]:
+                if self.level >= 10 and self.sect_member:
+                    # Check if we have sanctuary potions
+                    sanctpotname = "a sanctuary potion"
+                    if sanctpotname in self.containers.get(self.container, {}):
+                        if self.containers[self.container][sanctpotname] > 0:
+                            self.rod.write("quaff sanctuary-potion %s\n" % self.container)
+                            self.printc("Sanctuary faded! Quaffing sanctuary potion...", 'gold')
+                        else:
+                            self.printc("Sanctuary faded and no potions available!", 'red')
+                            if self.fight:
+                                self.rod.write("flee\n")
+                
             if "starved" in rln[i] or "You are mite peckish" in rln[i] or "You are STARVING!" in rln[i]:
                 self.rod.write("eat turkey %s\n"%self.container)
 
@@ -1455,6 +1479,59 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             return False
         else:
             return self.cleric.location
+
+    def handle_sect_invitation(self):
+        """Handle the sect invitation process for level 10+ characters"""
+        if self.level >= 10 and not self.sect_member:
+            self.printc("Initiating sect invitation process...", 'gold')
+            
+            # Log in Kaan
+            self.printc("Logging in Kaan for sect invitation...", 'gold')
+            kaan = self.ROD("Kaan", "Elijah", "chest", "none")
+            self.time.sleep(5)
+            
+            # Kaan goes to Darkhaven Square
+            kaan.rod.write("secthome\n")
+            self.time.sleep(2)
+            kaan.rod.write("jig\n")
+            self.time.sleep(3)
+            
+            # Make sure character is at Darkhaven Square
+            self.godh()
+            self.time.sleep(2)
+            
+            # Kaan invites the character
+            kaan.rod.write("sectinvite %s\n" % self.name)
+            self.time.sleep(2)
+            
+            # Character accepts invitation
+            self.rod.write("sectinvite Seraphim accept\n")
+            self.time.sleep(3)
+            
+            # Check if invitation was successful
+            r = self.read()
+            if "You are now a member of" in r or "Seraphim" in r:
+                self.sect_member = True
+                self.printc("Successfully joined sect Seraphim!", 'gold')
+                
+                # Save sect membership status
+                if "sect_member" not in self.alt_info:
+                    self.alt_info["sect_member"] = True
+                    self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'w'))
+            else:
+                self.printc("Sect invitation may have failed, halting...", 'red')
+                kaan.quit()
+                self.quit()
+                self.status = "quit"
+                return False
+            
+            # Kaan returns home and logs out
+            kaan.rod.write("secthome\n")
+            self.time.sleep(2)
+            kaan.quit()
+            
+            return True
+        return True
 
     def log_cleric(self):
         if self.master != None:
