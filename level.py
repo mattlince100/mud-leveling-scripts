@@ -501,7 +501,10 @@ class dhaven:
                     num_needed = 5
                     if sanctpotname in self.containers[self.container]:
                         num_needed = 5 - self.containers[self.container][sanctpotname]
-                    self.rod.write("fill %s %d sanctuary-potion shelf-potion\n" % (self.container, num_needed))
+                    
+                    fill_command = "fill %s %d sanctuary-potion shelf-potion\n" % (self.container, num_needed)
+                    self.printc("DEBUG: Sanctuary potion command: %s" % fill_command.strip(), 'cyan')
+                    self.rod.write(fill_command)
                     time.sleep(2)
                     # Return to recall room (stay in sect house)
                     self.go("n;u;u")
