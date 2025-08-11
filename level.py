@@ -166,6 +166,12 @@ class dhaven:
 
             print("\nINITIAL CHECKUP", self.location, self.inv, self.aff,"\n", "STATS", self.stats)
 
+            # For sect members, always ensure we start from Darkhaven Square
+            if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                if self.location != "Darkhaven Square":
+                    self.printc("DEBUG: Sect member not at DH Square, using godh() to get there", 'magenta')
+                    self.godh()
+                    self.time.sleep(1)
 
         
 

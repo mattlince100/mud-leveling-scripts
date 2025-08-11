@@ -6,10 +6,16 @@ class Commands:
         ''' checks hp and find the amount of heals needed '''
 
         pot = None
+        # For sect members, use sect house potion names
+        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+            healing_potions = ['heal', 'violet', 'force']  # sect house healing potions
+        else:
+            healing_potions = ['heal', 'purple']  # regular potions
+            
         for (pot, cont) in list(self.pots.keys()):
-            if pot in ['heal','purple']:
+            if pot in healing_potions:
                 break
-        if pot not in ['heal','purple']:
+        if pot not in healing_potions:
             self.printc("%s can't find pots"%self.name)
             self.time.sleep(1)
             self.find_pots()
@@ -18,8 +24,10 @@ class Commands:
                         
         self.healpot = "quaff %s %s"%(pot, cont)
         
-        if pot == "purple":
+        if pot in ["purple"]:
             hp = 40
+        elif pot in ["violet", "force", "heal"]:
+            hp = 100
         else:
             hp = 100
 
@@ -550,6 +558,11 @@ class Commands:
         
 
     def restock(self):
+        
+        # Sect members don't use this function - they get potions from sect house
+        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+            self.printc("DEBUG: Sect member skipping restock - using sect house potion system", 'magenta')
+            return
     	
     	# REPAIR
     	#if len([x[0] for x in self.eqdam if x[1] != "superb"]) > 0:
@@ -580,6 +593,11 @@ class Commands:
 
     def refillpots(self, potstoget, container):   
         
+        # Sect members don't use this function - they get potions from sect house
+        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+            self.printc("DEBUG: Sect member skipping refillpots - using sect house instead", 'magenta')
+            return
+            
         self.do("get recall basket;get recall 2.basket;rec scroll;d;d;s;s;s;nw;w",self.rod)
         self.repairall()
         self.do("e;se;ne;e;buy recall;w;sw;n;n;n;n;w",self.rod)
@@ -663,6 +681,11 @@ class Commands:
         self.trackon(target)
 
     def refillpotsunorder(self, potstoget, container):
+        # Sect members don't use this function - they get potions from sect house
+        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+            self.printc("DEBUG: Sect member skipping refillpotsunorder - using sect house instead", 'magenta')
+            return
+            
         if True:
             rod = self.telnetlib.Telnet("realmsofdespair.com",4000) 
             self.time.sleep(2)

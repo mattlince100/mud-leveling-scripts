@@ -1186,10 +1186,19 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             elif self.location == "Darkhaven Square":
                 pass
             else:
+                # Check if character is a sect member level 10+
+                if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                    # Use secthome for sect members
+                    self.printc("DEBUG: Sect member using secthome;jig to reach DH Square from %s" % self.location, 'green')
+                    self.rod.write("secthome\n")
+                    self.time.sleep(2)
+                    self.rod.write("jig\n")
+                    self.time.sleep(2)
+                    self.printc("DEBUG: Sect member should now be at DH Square", 'green')
                 # Debug: Print current location for Kaeval
-                if self.name in ["Kaeval", "Lemaitre"]:
+                elif self.name in ["Kaeval", "Lemaitre"]:
                     self.printc("KAEVAL RECALL DEBUG: Currently at '%s'" % self.location, 'red')
-                if self.charclass == "Barbarian":
+                elif self.charclass == "Barbarian":
                     self.rod.write("inv\nshatter recall\nget recall my.chest\n")
                     self.time.sleep(2)
                     self.go("w;n;n;nw;w;n;nw;n;w")
@@ -1224,7 +1233,13 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             elif  self.location == "Darkhaven Square":
                 self.go("n")
             else:
-                if self.charclass == "Barbarian":
+                # Check if character is a sect member level 10+
+                if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                    # Use secthome for sect members
+                    self.printc("DEBUG: Sect member using secthome to reach recall room from %s" % self.location, 'green')
+                    self.rod.write("secthome\n")
+                    self.time.sleep(2)
+                elif self.charclass == "Barbarian":
                     self.rod.write("inv\nshatter recall\nget recall my.chest\n")
                     self.time.sleep(1.5)
                     self.go("w;n;n;nw;w;n;nw;n;w")
