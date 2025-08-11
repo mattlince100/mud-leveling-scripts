@@ -1011,7 +1011,10 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
 
 
     def healup(self):
-        heal = "lament"
+        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+            heal = "heal"  # Sect house healing potions use 'heal' keyword
+        else:
+            heal = "lament"  # Old healing potions use 'lament' keyword
         printc("Heals: %d Purples: %d"%(self.heals, 0), 'gold')
         self.rod.write("quaff %s %s\n"%(heal, self.container))
         self.heals -= 1
