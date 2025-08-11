@@ -552,12 +552,17 @@ class dhaven:
                     self.go("s;e;e;e;n;n")
 
             getpotion = False
+            self.printc("DEBUG: Looking for healing potion '%s' in container" % self.potname, 'yellow')
+            self.printc("DEBUG: Container contents: %s" % str(self.containers[self.container]), 'yellow')
             if self.potname in self.containers[self.container]:
+                current_amount = self.containers[self.container][self.potname]
                 if self.master != None:
                     potreq = potreq/2
-                if self.containers[self.container][self.potname] < potreq:
+                self.printc("DEBUG: Have %d healing potions, need %d" % (current_amount, potreq), 'yellow')
+                if current_amount < potreq:
                     getpotion = True
             else:
+                self.printc("DEBUG: Healing potion not found in container, will restock", 'yellow')
                 getpotion = True
 
             getpotionmana = False
