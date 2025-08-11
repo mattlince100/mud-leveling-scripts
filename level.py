@@ -574,7 +574,7 @@ class dhaven:
                     if getpotionmana and self.level >= 7:
                         # Go to potion storage room for mana potions
                         self.go("d;d;s")
-                        mana_needed = 10  # Standard amount
+                        mana_needed = 20  # Sect mana potions weigh half, so we can carry twice as many
                         fill_command = "fill %s %d mana" % (self.container, mana_needed)
                         self.printc("DEBUG: Mana potion command: %s" % fill_command, 'cyan')
                         self.rod.write(fill_command + "\n")
