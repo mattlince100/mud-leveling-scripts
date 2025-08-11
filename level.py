@@ -507,12 +507,14 @@ class dhaven:
                     self.go("n;u;u")
             
             getrecall = False
-            if recallname in self.containers[self.container]:
-                if self.containers[self.container][recallname] < 2:
-                    # need recall
+            # Sect members don't need recall scrolls - they use secthome
+            if not (self.level >= 10 and self.sect_member):
+                if recallname in self.containers[self.container]:
+                    if self.containers[self.container][recallname] < 2:
+                        # need recall
+                        getrecall = True
+                else:
                     getrecall = True
-            else:
-                getrecall = True
                 
             if getrecall:
                 self.status_msg = "Getting recall scrolls"
