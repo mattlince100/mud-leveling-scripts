@@ -1485,23 +1485,32 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
         if self.level >= 10 and not self.sect_member:
             self.printc("Initiating sect invitation process...", 'gold')
             
-            # Make sure character is at Darkhaven Square first
+            # Character goes to Darkhaven Square and waits
+            self.printc("Going to Darkhaven Square for sect invitation...", 'gold')
             self.godh()
-            self.time.sleep(2)
+            self.time.sleep(3)
             
-            # Log in Kaan
-            self.printc("Logging in Kaan for sect invitation...", 'gold')
+            # Verify character is at Darkhaven Square
+            self.get_loc()
+            if self.location != "Darkhaven Square":
+                self.printc("Failed to reach Darkhaven Square, halting...", 'red')
+                self.quit()
+                self.status = "quit"
+                return False
+            
+            self.printc("Character ready at Darkhaven Square, logging in Kaan...", 'gold')
+            
+            # Now log in Kaan
             kaan = self.ROD("Kaan", "Elijah", "chest", "none")
             self.time.sleep(5)
             
-            # Kaan goes to sect house using secthome
+            # Kaan goes to sect house (which is at Darkhaven Square)
             kaan.rod.write("secthome\n")
             self.time.sleep(2)
             kaan.rod.write("jig\n")
             self.time.sleep(3)
             
-            # Wait a moment to ensure both characters are in same room
-            self.time.sleep(2)
+            self.printc("Both characters should now be at Darkhaven Square", 'gold')
             
             # Kaan invites the character
             kaan.rod.write("sectinvite %s\n" % self.name)
