@@ -492,7 +492,9 @@ class dhaven:
                     
                 if getsancpotions:
                     self.status_msg = "Getting sanctuary potions"
-                    self.godh()
+                    # Go to sect house first
+                    self.rod.write("secthome\n")
+                    self.time.sleep(2)
                     # Go to potion storage room
                     self.go("d;d;s")
                     # Fill container with 5 sanctuary potions
@@ -501,11 +503,8 @@ class dhaven:
                         num_needed = 5 - self.containers[self.container][sanctpotname]
                     self.rod.write("fill %s %d sanctuary-potion shelf-potion\n" % (self.container, num_needed))
                     time.sleep(2)
-                    # Return to recall room
+                    # Return to recall room (stay in sect house)
                     self.go("n;u;u")
-                    # Go back to Darkhaven Square
-                    self.rod.write("jig\n")
-                    time.sleep(2)
             
             getrecall = False
             if recallname in self.containers[self.container]:
