@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+
+# Log files
+*.log
+logs/
+log_*.txt
+
+# Pickle files (may contain sensitive data)
+*.pck
+*.pckle
+*.pickle
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Personal/sensitive files
+alts/
+info_*.pckle
+autotarget.pck
+
+# Test files
+test_*.py
