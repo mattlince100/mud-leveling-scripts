@@ -402,35 +402,37 @@ class dhaven:
             if self.level < 7:
                 potreq = 10
                 if self.level >= 10 and self.sect_member:
-                    self.potname = "the essence of forest"
+                    self.potname = "a glowing violet potion"  # or "force of will"
                     self.potnamemana = None
                 else:
                     self.potname = "a glowing purple potion"
                     self.potnamemana = None
             else:
                 if self.level >= 10 and self.sect_member:
-                    self.potname = "the essence of forest"
+                    self.potname = "a glowing violet potion"  # or "force of will"
                     self.potnamemana = None
                 else:
                     self.potname = "a glowing purple potion"
                     self.potnamemana = None
                 
                 if self.charclass in ["Mage", "Augurer", "Nephandi","Cleric","Fathomer"]:
-                    potreq = 20
                     if self.level >= 10 and self.sect_member:
-                        self.potnamemana = "harvest melomel"
+                        potreq = 200  # 200 heals for mages with extradimensional portal
+                        self.potnamemana = "the essence of forest"  # or "harvest melomel"
                     else:
+                        potreq = 20
                         self.potnamemana = "a glowing blue potion"
                     
                 else:
                     potreq = 40
                 if self.level >= 20:
-                    potreq = 100
-                    if self.charclass in ["Mage", "Augurer", "Nephandi","Cleric"]:
-                        potreq = 80  # Portal weight reduction allows full 80 potions
-                        if self.level >= 10 and self.sect_member:
-                            self.potnamemana = "harvest melomel"
-                        else:
+                    if self.level >= 10 and self.sect_member and self.charclass in ["Mage", "Augurer", "Nephandi","Cleric"]:
+                        potreq = 200  # 200 heals for mages with extradimensional portal
+                        self.potnamemana = "the essence of forest"  # or "harvest melomel"
+                    else:
+                        potreq = 100
+                        if self.charclass in ["Mage", "Augurer", "Nephandi","Cleric"]:
+                            potreq = 80  # Portal weight reduction allows full 80 potions
                             self.potnamemana = "a glowing blue potion"
                         
 
@@ -589,7 +591,7 @@ class dhaven:
                     if getpotionmana and self.level >= 7:
                         # Go to potion storage room for mana potions
                         self.go("d;d;s")
-                        mana_needed = 50  # Sect mana potions weigh half, so we can carry many more
+                        mana_needed = 100  # Standard amount for mages with extradimensional portal
                         fill_command = "fill %s %d mana" % (self.container, mana_needed)
                         self.printc("DEBUG: Mana potion command: %s" % fill_command, 'cyan')
                         self.rod.write(fill_command + "\n")
