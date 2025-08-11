@@ -570,9 +570,17 @@ class dhaven:
                         self.rod.write(fill_command + "\n")
                         self.time.sleep(2)
                     
-                    # Handle mana potions (still need to buy these)
+                    # Handle mana potions from potion room floor
                     if getpotionmana and self.level >= 7:
-                        self.buyblue()
+                        # Go to potion storage room for mana potions
+                        self.go("d;d;s")
+                        mana_needed = 10  # Standard amount
+                        fill_command = "fill %s %d mana" % (self.container, mana_needed)
+                        self.printc("DEBUG: Mana potion command: %s" % fill_command, 'cyan')
+                        self.rod.write(fill_command + "\n")
+                        self.time.sleep(2)
+                        # Return to recall room
+                        self.go("n;u;u")
                         
                 else:
                     # Use old Darkhaven path for non-sect members
