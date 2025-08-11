@@ -1538,6 +1538,13 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                 if "sect_member" not in self.alt_info:
                     self.alt_info["sect_member"] = True
                     self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'wb'))
+                
+                # Immediately go to sect house now that we're a member
+                self.printc("Going to sect house for the first time...", 'gold')
+                self.rod.write("secthome\n")
+                self.time.sleep(2)
+                self.rod.write("jig\n")
+                self.time.sleep(2)
             else:
                 self.printc("DEBUG: Looking for success patterns in response:", 'red')
                 self.printc("  'You are now a member of' found: %s" % ("You are now a member of" in r), 'red')
