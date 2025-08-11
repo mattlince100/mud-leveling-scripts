@@ -30,6 +30,10 @@ class Art:
             if not self.cleric_follow():
                 self.phase = 0
             else:
+                # Check if sect member - need to jig to Darkhaven Square first
+                if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                    self.rod.write("jig\n")
+                    self.time.sleep(2)
                 self.go("#4 s;w;#2 n")
              
         elif self.phase == 1:
