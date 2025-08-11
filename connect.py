@@ -1073,11 +1073,17 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             for x in self.slist:
                 if x[0] in mage and x[1] != '0':
                     spells.append(x[0])
+            
+            self.printc("DEBUG: Available mage spells: %s" % spells, 'yellow')
+            
             if len(spells) >= 2:
                 spell = spells[-2]
+                self.printc("DEBUG: Selected spell (2nd highest): %s" % spell, 'yellow')
             elif len(spells) == 1:
                 spell = spells[0]
+                self.printc("DEBUG: Selected spell (only one): %s" % spell, 'yellow')
             else:
+                self.printc("DEBUG: No spells available!", 'red')
                 return None
             return "cast \"%s\""%spell
         elif self.charclass == "Nephandi":
