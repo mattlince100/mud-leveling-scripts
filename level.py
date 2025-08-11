@@ -690,19 +690,19 @@ class dhaven:
             
             if getheal and self.phase == 2:
                 self.status_msg= "Waiting for heals"
-                self.godh()
                 if self.level >= 10 and self.sect_member:
-                    # Go to sect house (not Darkhaven Square)
+                    # Go to sect house recall room (where heal bots are)
                     self.rod.write("secthome\n")
                     self.time.sleep(2)
                     self.rod.write("say heal\n")
                 else:
+                    # Use old Darkhaven path for non-sect members
+                    self.godh()
                     self.go("nw;w;w;w")
                     self.rod.write("say heal\n")
+                    self.go("e;e;e;se")
                 self.sys.stdout.write("waiting for heal...\n")
                 time.sleep(5)
-                if not (self.level >= 10 and self.sect_member):
-                    self.go("e;e;e;se")
 
             getfly = False
             
