@@ -710,13 +710,16 @@ class dhaven:
             
             if getheal and self.phase == 2:
                 self.status_msg= "Waiting for heals"
+                self.printc("DEBUG: Heal needed - Level: %d, Sect member: %s" % (self.level, self.sect_member), 'yellow')
                 if self.level >= 10 and self.sect_member:
                     # Go to sect house recall room (where heal bots are)
+                    self.printc("DEBUG: Using sect house for healing", 'green')
                     self.rod.write("secthome\n")
                     self.time.sleep(2)
                     self.rod.write("say heal\n")
                 else:
                     # Use old Darkhaven path for non-sect members
+                    self.printc("DEBUG: Using old Darkhaven path for healing", 'red')
                     self.godh()
                     self.go("nw;w;w;w")
                     self.rod.write("say heal\n")
