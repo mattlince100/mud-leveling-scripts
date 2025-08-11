@@ -1514,7 +1514,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             
             # Kaan invites the character
             self.printc("Kaan sending sectinvite to %s..." % self.name, 'gold')
-            kaan.rod.write("sectinvite %s\n" % self.name)
+            kaan.rod.write("sectinvite %s invite\n" % self.name.lower())
             self.time.sleep(2)
             
             # Read Kaan's response
@@ -1523,7 +1523,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             
             # Character accepts invitation
             self.printc("Character accepting sect invitation...", 'gold')
-            self.rod.write("sectinvite Seraphim accept\n")
+            self.rod.write("sectinvite seraphim accept\n")
             self.time.sleep(3)
             
             # Check if invitation was successful
