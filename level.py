@@ -551,8 +551,17 @@ class dhaven:
 
                 sys.stdout.write("GETTING potions...\n")
                 self.status_msg = "Getting potions"
-                self.godh()
-                self.go("s;s;w;w;n")
+                
+                # Check if sect member - use house for potion restocking
+                if self.level >= 10 and self.sect_member:
+                    # Go to sect house recall room, then down to potion restocking area
+                    self.rod.write("secthome\n")
+                    self.time.sleep(2)
+                    self.go("d;d;s")  # From recall room to potion restocking area
+                else:
+                    # Use old Darkhaven path for non-sect members
+                    self.godh()
+                    self.go("s;s;w;w;n")
                 
                 if self.level >= 7:
                     if getpotionmana:
@@ -566,8 +575,13 @@ class dhaven:
                 else:
                     self.buypurple()
 
-
-                self.go("s;e;e;n;n")
+                # Return path after buying potions
+                if self.level >= 10 and self.sect_member:
+                    # Return to sect house recall room
+                    self.go("n;u;u")  # From potion area back to recall room
+                else:
+                    # Return to Darkhaven Square for non-sect members
+                    self.go("s;e;e;n;n")
                 self.time.sleep(4)
                 #self.phase = 1
                 
