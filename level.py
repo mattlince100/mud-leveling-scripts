@@ -527,7 +527,7 @@ class dhaven:
                         self.buyblue()
                     if getpotion:
                         if potreq > 20:
-                            for i in range(max([potreq/20-1,0])):
+                            for i in range(max([int(potreq/20)-1,0])):
                                 self.rod.write("buy %s %s\nempty bag %s\ndrop bag\n"%(20, self.potname.split()[2],self.container))
                         else:
                             self.rod.write("buy %s %s\nempty bag %s\ndrop bag\n"%(20, self.potname.split()[2],self.container))

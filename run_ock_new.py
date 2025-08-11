@@ -297,7 +297,7 @@ def go_back(rod):
                     pots = int(ln.split("(")[-1].split(")")[0])
             break
 
-    for p in range(1,(350-pots)/20):
+    for p in range(1,int((350-pots)/20)):
         rod.write("buy 20 purple\nempty bag basket\ndrop bag\n")
     
     sys.stdout.write(rod.read_very_lazy())

@@ -1606,7 +1606,7 @@ if __name__ == "__main__":
     try: targetlvl = int(sys.argv[3])
     except: targetlvl = 50
     try: maxtime = int(sys.argv[4])
-    except: maxtime = 60
+    except: maxtime = 525600  # Default to 1 year (essentially infinite)
     try: pw = sys.argv[5]
     except: 
         # Check for known character passwords
@@ -1681,10 +1681,11 @@ if __name__ == "__main__":
                     #    t.stop()
 
 
-                if float(time.time()-start)/60 > maxtime and not rod.fight:
-                    printc("Reached time limit\n")
-                    rod.quit()
-                    break
+                # Time limit check disabled for indefinite leveling
+                # if float(time.time()-start)/60 > maxtime and not rod.fight:
+                #     printc("Reached time limit\n")
+                #     rod.quit()
+                #     break
                 if targetlvl == rod.level and not rod.fight:
                     printc("Reached target level\n")
                     rod.quit()
