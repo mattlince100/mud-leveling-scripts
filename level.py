@@ -498,7 +498,7 @@ class dhaven:
             # Check sanctuary potions for sect members
             getsancpotions = False
             if self.level >= 10 and self.sect_member:
-                sanctpotname = "a sanctuary potion"  # TODO: Update with actual sect house sanctuary potion name
+                sanctpotname = "a sanctuary potion"
                 if sanctpotname in self.containers[self.container]:
                     if self.containers[self.container][sanctpotname] < 5:
                         getsancpotions = True
