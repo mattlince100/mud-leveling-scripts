@@ -215,7 +215,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                 self.rod.write("prompt PROMPT: %h/%HHP &C%m/%MMP &G%vMV&w &p%Xxp %gg%l\n")
                 self.rod.write("fprompt FPROMPT: %h/%HHP &C%m/%MMP &G%vMV&w &p%Xxp %c%l\n")
                 if self.charclass == "Mage" and self.level > 20:
-                    self.container = 'my.portal'
+                    self.container = 'my.extrad'  # Use extradimensional portal for weight reduction
 
             
 

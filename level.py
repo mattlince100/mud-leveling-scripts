@@ -410,7 +410,7 @@ class dhaven:
                 if self.level >= 20:
                     potreq = 100
                     if self.charclass in ["Mage", "Augurer", "Nephandi","Cleric"]:
-                        potreq = 80
+                        potreq = 80  # Portal weight reduction allows full 80 potions
                         self.potnamemana = "a glowing blue potion"
                         
 
