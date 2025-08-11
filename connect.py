@@ -1530,14 +1530,14 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             r = self.read()
             self.printc("Character response: %s" % r.strip(), 'cyan')
             
-            if "You are now a member of" in r or "Seraphim" in r or "accept" in r.lower():
+            if ("You are now a member of" in r or "Seraphim" in r or "accept" in r.lower() or 
+                "You have sworn allegiance to" in r):
                 self.sect_member = True
                 self.printc("Successfully joined sect Seraphim!", 'green')
                 
                 # Save sect membership status
-                if "sect_member" not in self.alt_info:
-                    self.alt_info["sect_member"] = True
-                    self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'wb'))
+                self.alt_info["sect_member"] = True
+                self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'wb'))
                 
                 # Immediately go to sect house now that we're a member
                 self.printc("Going to sect house for the first time...", 'gold')
@@ -1548,6 +1548,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             else:
                 self.printc("DEBUG: Looking for success patterns in response:", 'red')
                 self.printc("  'You are now a member of' found: %s" % ("You are now a member of" in r), 'red')
+                self.printc("  'You have sworn allegiance to' found: %s" % ("You have sworn allegiance to" in r), 'red')
                 self.printc("  'Seraphim' found: %s" % ("Seraphim" in r), 'red')
                 self.printc("  'accept' found: %s" % ("accept" in r.lower()), 'red')
                 self.printc("Sect invitation may have failed, halting...", 'red')

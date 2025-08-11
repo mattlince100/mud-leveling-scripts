@@ -127,6 +127,15 @@ class Checks:
 	        	self.deity = bsplt[i].split("Deity:")[-1].split()[0].strip()
 	        	self.favor = bsplt[i].split("Favor:")[-1].split()[0].strip()
 
+            elif "Sect:" in bsplt[i]:
+                sect_name = bsplt[i].split("Sect:")[-1].strip()
+                if sect_name and sect_name != "None":
+                    self.sect_member = True
+                    self.printc("Detected sect membership: %s" % sect_name, 'gold')
+                    # Save sect membership status
+                    self.alt_info["sect_member"] = True
+                    self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'wb'))
+
             elif "Class: " in bsplt[i]:
                 self.charclass = bsplt[i].split("Class: ")[-1].split()[0]
 
