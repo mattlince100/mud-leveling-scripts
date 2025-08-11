@@ -1513,24 +1513,36 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             self.printc("Both characters should now be at Darkhaven Square", 'gold')
             
             # Kaan invites the character
+            self.printc("Kaan sending sectinvite to %s..." % self.name, 'gold')
             kaan.rod.write("sectinvite %s\n" % self.name)
             self.time.sleep(2)
             
+            # Read Kaan's response
+            kaan_response = kaan.read()
+            self.printc("Kaan response: %s" % kaan_response.strip(), 'cyan')
+            
             # Character accepts invitation
+            self.printc("Character accepting sect invitation...", 'gold')
             self.rod.write("sectinvite Seraphim accept\n")
             self.time.sleep(3)
             
             # Check if invitation was successful
             r = self.read()
-            if "You are now a member of" in r or "Seraphim" in r:
+            self.printc("Character response: %s" % r.strip(), 'cyan')
+            
+            if "You are now a member of" in r or "Seraphim" in r or "accept" in r.lower():
                 self.sect_member = True
-                self.printc("Successfully joined sect Seraphim!", 'gold')
+                self.printc("Successfully joined sect Seraphim!", 'green')
                 
                 # Save sect membership status
                 if "sect_member" not in self.alt_info:
                     self.alt_info["sect_member"] = True
                     self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'wb'))
             else:
+                self.printc("DEBUG: Looking for success patterns in response:", 'red')
+                self.printc("  'You are now a member of' found: %s" % ("You are now a member of" in r), 'red')
+                self.printc("  'Seraphim' found: %s" % ("Seraphim" in r), 'red')
+                self.printc("  'accept' found: %s" % ("accept" in r.lower()), 'red')
                 self.printc("Sect invitation may have failed, halting...", 'red')
                 kaan.quit()
                 self.quit()
