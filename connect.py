@@ -183,13 +183,10 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             self.level = 0
             self.prestige = False
             
-            # Check if previously joined sect
-            try:
-                self.alt_info = self.pickle.load(open("alts/info_%s.pckle"%self.name,'r'))
-                if "sect_member" in self.alt_info:
-                    self.sect_member = self.alt_info["sect_member"]
-            except:
-                pass
+            # Check if previously joined sect (alt_info already loaded above)
+            if "sect_member" in self.alt_info:
+                self.sect_member = self.alt_info["sect_member"]
+                self.printc("Loaded sect membership: %s" % self.sect_member, 'gold')
 
             # log
             self.lastmob = None
