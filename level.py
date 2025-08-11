@@ -401,14 +401,26 @@ class dhaven:
 
             if self.level < 7:
                 potreq = 10
-                self.potname = "a glowing purple potion"
-                self.potnamemana = None
+                if self.level >= 10 and self.sect_member:
+                    self.potname = "the essence of forest"
+                    self.potnamemana = None
+                else:
+                    self.potname = "a glowing purple potion"
+                    self.potnamemana = None
             else:
-                self.potname = "a glowing purple potion"
-                self.potnamemana = None
+                if self.level >= 10 and self.sect_member:
+                    self.potname = "the essence of forest"
+                    self.potnamemana = None
+                else:
+                    self.potname = "a glowing purple potion"
+                    self.potnamemana = None
+                
                 if self.charclass in ["Mage", "Augurer", "Nephandi","Cleric","Fathomer"]:
                     potreq = 20
-                    self.potnamemana = "a glowing blue potion"
+                    if self.level >= 10 and self.sect_member:
+                        self.potnamemana = "harvest melomel"
+                    else:
+                        self.potnamemana = "a glowing blue potion"
                     
                 else:
                     potreq = 40
@@ -416,7 +428,10 @@ class dhaven:
                     potreq = 100
                     if self.charclass in ["Mage", "Augurer", "Nephandi","Cleric"]:
                         potreq = 80  # Portal weight reduction allows full 80 potions
-                        self.potnamemana = "a glowing blue potion"
+                        if self.level >= 10 and self.sect_member:
+                            self.potnamemana = "harvest melomel"
+                        else:
+                            self.potnamemana = "a glowing blue potion"
                         
 
             getthoric = False
@@ -483,7 +498,7 @@ class dhaven:
             # Check sanctuary potions for sect members
             getsancpotions = False
             if self.level >= 10 and self.sect_member:
-                sanctpotname = "a sanctuary potion"
+                sanctpotname = "a sanctuary potion"  # TODO: Update with actual sect house sanctuary potion name
                 if sanctpotname in self.containers[self.container]:
                     if self.containers[self.container][sanctpotname] < 5:
                         getsancpotions = True
