@@ -464,7 +464,9 @@ class dhaven:
 
                 # Check if sect member - use house for spells
                 if self.level >= 10 and self.sect_member:
-                    # Already at sect house from godh(), just say spells
+                    # Go to sect house (not Darkhaven Square)
+                    self.rod.write("secthome\n")
+                    self.time.sleep(2)
                     self.rod.write("say buffs!\nsay shields!\n")
                     sys.stdout.write("Waiting for level spells 30s...\n")
                     time.sleep(40)
@@ -653,7 +655,9 @@ class dhaven:
                 else:
                     self.godh()
                     if self.level >= 10 and self.sect_member:
-                        # Already at sect house from godh()
+                        # Go to sect house (not Darkhaven Square)
+                        self.rod.write("secthome\n")
+                        self.time.sleep(2)
                         self.rod.write("say #sanc\n")
                         time.sleep(10)
                     else:
@@ -675,7 +679,9 @@ class dhaven:
                 self.status_msg= "Waiting for heals"
                 self.godh()
                 if self.level >= 10 and self.sect_member:
-                    # Already at sect house
+                    # Go to sect house (not Darkhaven Square)
+                    self.rod.write("secthome\n")
+                    self.time.sleep(2)
                     self.rod.write("say heal\n")
                 else:
                     self.go("nw;w;w;w")
@@ -730,7 +736,9 @@ class dhaven:
                     else:
                         self.godh()
                         if self.level >= 10 and self.sect_member:
-                            # Already at sect house
+                            # Go to sect house (not Darkhaven Square)
+                            self.rod.write("secthome\n")
+                            self.time.sleep(2)
                             self.rod.write("say #fly\n")
                             self.time.sleep(5)
                         else:
