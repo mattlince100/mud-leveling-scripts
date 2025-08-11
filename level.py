@@ -558,32 +558,39 @@ class dhaven:
                 
                 # Check if sect member - use house for potion restocking
                 if self.level >= 10 and self.sect_member:
-                    # Go to sect house recall room, then down to potion restocking area
+                    # Go to sect house recall room
                     self.rod.write("secthome\n")
                     self.time.sleep(2)
-                    self.go("d;d;s")  # From recall room to potion restocking area
+                    
+                    # Handle healing potions from shell at recall room
+                    if getpotion:
+                        heal_needed = int(potreq)
+                        fill_command = "fill %s %d heal-potion shell" % (self.container, heal_needed)
+                        self.printc("DEBUG: Healing potion command: %s" % fill_command, 'cyan')
+                        self.rod.write(fill_command + "\n")
+                        self.time.sleep(2)
+                    
+                    # Handle mana potions (still need to buy these)
+                    if getpotionmana and self.level >= 7:
+                        self.buyblue()
+                        
                 else:
                     # Use old Darkhaven path for non-sect members
                     self.godh()
                     self.go("s;s;w;w;n")
-                
-                if self.level >= 7:
-                    if getpotionmana:
-                        self.buyblue()
-                    if getpotion:
-                        if potreq > 20:
-                            for i in range(max([int(potreq/20)-1,0])):
+                    
+                    if self.level >= 7:
+                        if getpotionmana:
+                            self.buyblue()
+                        if getpotion:
+                            if potreq > 20:
+                                for i in range(max([int(potreq/20)-1,0])):
+                                    self.rod.write("buy %s %s\nempty bag %s\ndrop bag\n"%(20, self.potname.split()[2],self.container))
+                            else:
                                 self.rod.write("buy %s %s\nempty bag %s\ndrop bag\n"%(20, self.potname.split()[2],self.container))
-                        else:
-                            self.rod.write("buy %s %s\nempty bag %s\ndrop bag\n"%(20, self.potname.split()[2],self.container))
-                else:
-                    self.buypurple()
-
-                # Return path after buying potions
-                if self.level >= 10 and self.sect_member:
-                    # Return to sect house recall room
-                    self.go("n;u;u")  # From potion area back to recall room
-                else:
+                    else:
+                        self.buypurple()
+                    
                     # Return to Darkhaven Square for non-sect members
                     self.go("s;e;e;n;n")
                 self.time.sleep(4)
