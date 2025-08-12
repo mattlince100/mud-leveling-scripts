@@ -208,7 +208,11 @@ class Commands:
                         self.rod.write("flee\nquit\n")
                         self.status = "restart"
                     elif int(self.HP) < int(self.MAXHP)*0.7:
-                        self.rod.write(self.heal)
+                        # Sect members use 'heal' keyword, others use 'purple'
+                        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                            self.rod.write("quaff heal %s\n"%self.container)
+                        else:
+                            self.rod.write("quaff purple %s\n"%self.container)
                     
                 
             self.start = time.time()
