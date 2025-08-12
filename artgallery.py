@@ -7,11 +7,14 @@ class Art:
         # Check for healing at the start of each Art Gallery phase
         if hasattr(self, 'HP') and hasattr(self, 'MAXHP') and hasattr(self, 'sect_member'):
             if int(self.HP) < int(self.MAXHP) * 0.8:
+                # Debug sect membership detection
+                self.printc("DEBUG: SECT CHECK - hasattr:%s sect_member:%s level:%s" % (hasattr(self, 'sect_member'), getattr(self, 'sect_member', 'MISSING'), self.level), 'cyan')
                 if self.sect_member and self.level >= 10:
                     self.printc("DEBUG: ART GALLERY HEALING for %s HP:%s/%s" % (self.name, self.HP, self.MAXHP), 'red')
                     self.rod.write("quaff heal %s\n" % self.container)
                     self.time.sleep(1)
                 else:
+                    self.printc("DEBUG: USING PURPLE HEALING for %s HP:%s/%s" % (self.name, self.HP, self.MAXHP), 'red')
                     self.rod.write("quaff purple %s\n" % self.container)
                     self.time.sleep(1)
         
@@ -298,10 +301,13 @@ class Art:
                 # Check for healing during combat in Art Gallery
                 if self.fight and hasattr(self, 'HP') and hasattr(self, 'MAXHP'):
                     if int(self.HP) < int(self.MAXHP) * 0.8:
+                        # Debug sect membership detection during combat
+                        self.printc("DEBUG: COMBAT SECT CHECK - hasattr:%s sect_member:%s level:%s" % (hasattr(self, 'sect_member'), getattr(self, 'sect_member', 'MISSING'), self.level), 'cyan')
                         if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
-                            self.printc("DEBUG: ART GALLERY HEALING for %s HP:%s/%s" % (self.name, self.HP, self.MAXHP), 'red')
+                            self.printc("DEBUG: ART GALLERY COMBAT HEALING for %s HP:%s/%s" % (self.name, self.HP, self.MAXHP), 'red')
                             self.rod.write("quaff heal %s\n" % self.container)
                         else:
+                            self.printc("DEBUG: USING PURPLE COMBAT HEALING for %s HP:%s/%s" % (self.name, self.HP, self.MAXHP), 'red')
                             self.rod.write("quaff purple %s\n" % self.container)
             else:
                 

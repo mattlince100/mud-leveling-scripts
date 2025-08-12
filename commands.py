@@ -10,6 +10,10 @@ class Commands:
             self.printc("DEBUG: HEALUP CALLED for %s HP:%s/%s - pots available: %s" % (self.name, self.HP, self.MAXHP, list(self.pots.keys())), 'red')
 
         pot = None
+        # Debug: Show all available potions for sect members
+        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+            self.printc("DEBUG: All potions found: %s" % list(self.pots.keys()), 'yellow')
+        
         for (pot, cont) in list(self.pots.keys()):
             if pot in ['heal','purple']:
                 break
