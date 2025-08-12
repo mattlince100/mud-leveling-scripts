@@ -975,8 +975,11 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
             self.cleric_heal()
 
             if int(self.HP) < int(self.MAXHP)*0.8:
-                
-                self.pot = "purple"
+                # Sect members use 'heal' keyword, others use 'purple'
+                if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                    self.pot = "heal"
+                else:
+                    self.pot = "purple"
                 self.rod.write("quaff %s %s\n"%(self.pot, self.container))
                 self.lag = 1
             else:

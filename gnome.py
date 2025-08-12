@@ -8,7 +8,11 @@ class Gnome:
             if self.level <= 7:
                 self.pot = "maroon"
             else:
-                self.pot = "purple"
+                # Sect members use 'heal' keyword, others use 'purple'
+                if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                    self.pot = "heal"
+                else:
+                    self.pot = "purple"
                 
             self.rod.write("quaff %s %s\n"%(self.pot, self.container))
             
