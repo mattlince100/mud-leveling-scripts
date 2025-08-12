@@ -646,7 +646,11 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                             self.nofeed = False
                             if int(self.MP) < int(self.MAXMP)*0.7:
                                 if self.container in self.containers:
-                                    if "a glowing blue potion" in self.containers[self.container]:
+                                    # Check for sect house mana potions first
+                                    if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                                        if "the essence of forest" in self.containers[self.container] or "harvest melomel" in self.containers[self.container]:
+                                            self.rod.write("q mana %s\n"%self.container)
+                                    elif "a glowing blue potion" in self.containers[self.container]:
                                         self.rod.write("q blue %s\n"%self.container)
                             self.fight = False
                             self.usespell = True
@@ -766,7 +770,11 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                         self.rod.write("flee\nquit\n")
                         self.status = "restart"
                     elif int(self.HP) < int(self.MAXHP)*0.7:
-                        self.rod.write("quaff purple %s\n"%self.container)
+                        # Sect members use 'heal' keyword, others use 'purple'
+                        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                            self.rod.write("quaff heal %s\n"%self.container)
+                        else:
+                            self.rod.write("quaff purple %s\n"%self.container)
                     
                 if "Your stomach cannot contain any more." in l:
                     self.rod.write('drink\n')
@@ -993,12 +1001,21 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                     else:
                         
                         if spell != None and self.charclass in ['Mage',"Augurer", "Nephandi", "Cleric","Fathomer"]:
-                            if self.charclass == "Fathomer":
-                               if self.random.random() < 0.3: 
-                                   self.rod.write("q blue %s\n"%self.container)
+                            # For sect members, use mana command instead of blue
+                            if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                                if self.charclass == "Fathomer":
+                                   if self.random.random() < 0.3: 
+                                       self.rod.write("q mana %s\n"%self.container)
+                                else:
+                                    if self.random.random() < 0.7:
+                                       self.rod.write("q mana %s\n"%self.container)
                             else:
-                                if self.random.random() < 0.7:
-                                   self.rod.write("q blue %s\n"%self.container)
+                                if self.charclass == "Fathomer":
+                                   if self.random.random() < 0.3: 
+                                       self.rod.write("q blue %s\n"%self.container)
+                                else:
+                                    if self.random.random() < 0.7:
+                                       self.rod.write("q blue %s\n"%self.container)
 
                         
 

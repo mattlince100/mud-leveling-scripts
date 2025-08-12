@@ -30,6 +30,9 @@ class Checks:
             'a glowing violet potion':("heal",100),
             "Dragons' lament":("heal", 100),
             'a glowing purple potion':("purple",40),
+            'the essence of forest':("mana",100),
+            'harvest melomel':("mana",100),
+            'a glowing blue potion':("blue",100),
             }
         
         self.pots = {}

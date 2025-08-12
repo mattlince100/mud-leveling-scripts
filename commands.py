@@ -5,17 +5,15 @@ class Commands:
     def healup(self):
         ''' checks hp and find the amount of heals needed '''
 
-        pot = None
-        # For sect members, use sect house potion names
+        # Debug: Always show when healup is called for sect members
         if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
-            healing_potions = ['heal', 'violet', 'force']  # sect house healing potions
-        else:
-            healing_potions = ['heal', 'purple']  # regular potions
-            
+            self.printc("DEBUG: HEALUP CALLED for %s HP:%s/%s - pots available: %s" % (self.name, self.HP, self.MAXHP, list(self.pots.keys())), 'red')
+
+        pot = None
         for (pot, cont) in list(self.pots.keys()):
-            if pot in healing_potions:
+            if pot in ['heal','purple']:
                 break
-        if pot not in healing_potions:
+        if pot not in ['heal','purple']:
             self.printc("%s can't find pots"%self.name)
             self.time.sleep(1)
             self.find_pots()
@@ -24,10 +22,12 @@ class Commands:
                         
         self.healpot = "quaff %s %s"%(pot, cont)
         
-        if pot in ["purple"]:
+        # Debug: Show the exact command being generated
+        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+            self.printc("DEBUG: %s healpot command: '%s'" % (self.name, self.healpot), 'cyan')
+        
+        if pot == "purple":
             hp = 40
-        elif pot in ["violet", "force", "heal"]:
-            hp = 100
         else:
             hp = 100
 
@@ -51,6 +51,11 @@ class Commands:
                 actions = [self.healpot]*numpots
 
         print("\n".join(actions))
+        
+        # Debug: Show exact commands being sent for sect members
+        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+            self.printc("DEBUG: %s SENDING HEAL COMMANDS: %s" % (self.name, actions), 'yellow')
+            
         self.waitcmd2("\n".join(actions)+'\n')
 
     def fight(self):
@@ -271,6 +276,10 @@ class Commands:
 
 
     def func_fight(self):
+        # Debug: Always show when func_fight is called for sect members
+        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+            self.printc("DEBUG: FUNC_FIGHT CALLED for %s" % self.name, 'red')
+            
         self.fightcheck()
         print(self.name, self.charclass, self.MP)
         if True:
@@ -279,6 +288,12 @@ class Commands:
                 if 'sanctuary' not in self.aff and "holy sanctity" not in self.aff:
                     self.rod.write("gt sanc's off\n")
             self.printc("%s: %d/%dhp"%(self.name,  int(self.HP), int(self.MAXHP)))
+            
+            # Debug: Check healing threshold for sect members
+            if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                heal_threshold = int(self.MAXHP)*0.8
+                self.printc("DEBUG: %s HP %d < %d threshold? %s" % (self.name, int(self.HP), heal_threshold, int(self.HP) < heal_threshold), 'magenta')
+            
             if int(self.HP) < int(self.MAXHP)*0.8:
                 self.healup()
             else:

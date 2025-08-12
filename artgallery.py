@@ -4,6 +4,17 @@ class Art:
     
     
     def func_art(self):
+        # Check for healing at the start of each Art Gallery phase
+        if hasattr(self, 'HP') and hasattr(self, 'MAXHP') and hasattr(self, 'sect_member'):
+            if int(self.HP) < int(self.MAXHP) * 0.8:
+                if self.sect_member and self.level >= 10:
+                    self.printc("DEBUG: ART GALLERY HEALING for %s HP:%s/%s" % (self.name, self.HP, self.MAXHP), 'red')
+                    self.rod.write("quaff heal %s\n" % self.container)
+                    self.time.sleep(1)
+                else:
+                    self.rod.write("quaff purple %s\n" % self.container)
+                    self.time.sleep(1)
+        
         mobloc = {'By the "Demons Within" Sculpture':"phunbaba", "Welmar's Left Arm":"hand",
                   "Welmar's Right Arm":"hand", "Welmar's Right Foot":"foot", 
                   "Welmar's Left Foot":"foot",
@@ -283,6 +294,15 @@ class Art:
                             self.rod.write("kill %s\n"%(mobnames[mob]))
                             self.target = mobnames[mob]
                             self.fight = True
+                            
+                # Check for healing during combat in Art Gallery
+                if self.fight and hasattr(self, 'HP') and hasattr(self, 'MAXHP'):
+                    if int(self.HP) < int(self.MAXHP) * 0.8:
+                        if hasattr(self, 'sect_member') and self.sect_member and self.level >= 10:
+                            self.printc("DEBUG: ART GALLERY HEALING for %s HP:%s/%s" % (self.name, self.HP, self.MAXHP), 'red')
+                            self.rod.write("quaff heal %s\n" % self.container)
+                        else:
+                            self.rod.write("quaff purple %s\n" % self.container)
             else:
                 
                 self.sys.stdout.write("DONE THIS ROUND...\n")
