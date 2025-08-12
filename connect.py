@@ -1308,7 +1308,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                     sanctpotname = "a sanctuary potion"
                     if sanctpotname in self.containers.get(self.container, {}):
                         if self.containers[self.container][sanctpotname] > 0:
-                            self.rod.write("quaff sanctuary-potion %s\n" % self.container)
+                            self.rod.write("quaff sanctuary %s\n" % self.container)
                             self.printc("Sanctuary faded! Quaffing sanctuary potion...", 'gold')
                         else:
                             self.printc("Sanctuary faded and no potions available!", 'red')

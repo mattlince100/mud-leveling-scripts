@@ -33,6 +33,7 @@ class Checks:
             'the essence of forest':("mana",100),
             'harvest melomel':("mana",100),
             'a glowing blue potion':("blue",100),
+            'a sanctuary potion':("sanctuary",100),
             }
         
         self.pots = {}
