@@ -79,15 +79,26 @@ class Toz:
 
                 self.check_affect()
                 getsanc = False
-                if "sanctuary" in self.aff:
-                    if self.aff['sanctuary'] < 10:
-                        self.time.sleep(self.aff['sanctuary']*3.2)
+                # Skip sanctuary wait if we have potions or cleric
+                has_sanctuary_support = self.clericon
+                if self.level >= 10 and self.sect_member:
+                    sanctpotname = "a sanctuary potion"
+                    if sanctpotname in self.containers.get(self.container, {}):
+                        if self.containers[self.container][sanctpotname] > 0:
+                            has_sanctuary_support = True
+                
+                if has_sanctuary_support:
+                    # We have sanctuary support, just refresh when needed
+                    if "sanctuary" not in self.aff:
                         getsanc = True
                 else:
-                    getsanc = True
-
-                if self.clericon:
-                    getsanc = False
+                    # Only wait if no sanctuary support available
+                    if "sanctuary" in self.aff:
+                        if self.aff['sanctuary'] < 10:
+                            self.time.sleep(self.aff['sanctuary']*3.2)
+                            getsanc = True
+                    else:
+                        getsanc = True
 
                 if getsanc and not self.fight:
                     self.check_spells()
@@ -139,6 +150,15 @@ class Toz:
                 if alone:
                     for mob in mobs:
                         if mobs[mob] > 0 and mob in self.cankill:
+                            # Check if leveling spells need refreshing before combat
+                            self.check_affect()  # Update current spell durations
+                            needs_refresh, low_spells = self.check_leveling_spells()
+                            if needs_refresh:
+                                self.printc("Low critical spells detected before combat: %s" % ", ".join(low_spells), 'red')
+                                self.refresh_leveling_spells()
+                                self.printc("Spells refreshed, returning to Tower of Zenithia...", 'green')
+                                return "continue"  # Stay in this area and re-evaluate
+                            
                             self.rod.write("kill %s\n"%(mobnames[mob]))
                             self.fight = True
             else:

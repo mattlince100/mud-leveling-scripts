@@ -157,6 +157,15 @@ class Gnome:
                 else:
                     for mob in self.mobs:
                         if self.mobs[mob] > 0 and mob in self.cankill:
+                            # Check if leveling spells need refreshing before combat
+                            self.check_affect()  # Update current spell durations
+                            needs_refresh, low_spells = self.check_leveling_spells()
+                            if needs_refresh:
+                                self.printc("Low critical spells detected before combat: %s" % ", ".join(low_spells), 'red')
+                                self.refresh_leveling_spells()
+                                self.printc("Spells refreshed, returning to Gnome Village...", 'green')
+                                return "continue"  # Stay in this area and re-evaluate
+                            
                             self.rod.write("kill %s\n"%(self.mobnames[mob]))
                             self.fight = True
             else:

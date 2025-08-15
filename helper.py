@@ -1,13 +1,13 @@
 
 
-class Helper:
+from telnetlib_compat import Telnet
 
-    import telnetlib
+class Helper:
 
 
     def log_alt(self, name):
 
-        self.alt = self.telnetlib.Telnet("realmsofdespair.com",4000)
+        self.alt = Telnet("realmsofdespair.com",4000)
         
         # Monkey patch for Python 3 compatibility
         original_write = self.alt.write
@@ -44,7 +44,7 @@ class Helper:
 
     def log(self):
 
-        self.rod = self.telnetlib.Telnet("realmsofdespair.com",4000)
+        self.rod = Telnet("realmsofdespair.com",4000)
         
         # Monkey patch for Python 3 compatibility
         original_write = self.rod.write

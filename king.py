@@ -78,18 +78,46 @@ class King:
                         self.cleric.rod.write("c 'remove curse' %s\n"%self.name)
                     elif self.charclass != "Barbarian":
                         self.rod.write("sleep\n")
-                        self.time.sleep(self.aff['curse']*3.1)
+                        
+                        # Break the wait into 10-second chunks and check if curse is still active
+                        total_wait = self.aff['curse']*3.1
+                        waited = 0
+                        while waited < total_wait:
+                            chunk_time = min(10, total_wait - waited)
+                            self.time.sleep(chunk_time)
+                            waited += chunk_time
+                            
+                            # Check if curse is still active
+                            self.check_affect()
+                            if "curse" not in self.aff:
+                                self.printc("Curse removed! Continuing...", 'green')
+                                break
+                        
                         self.rod.write("wake\n")
                         return 'dhaven'
 
                 getsanc = False
-                if "sanctuary" in self.aff:
-                    if self.aff['sanctuary'] < 30:
+                # Skip sanctuary wait if we have potions or cleric
+                has_sanctuary_support = False
+                if self.level >= 10 and self.sect_member:
+                    sanctpotname = "a sanctuary potion"
+                    if sanctpotname in self.containers.get(self.container, {}):
+                        if self.containers[self.container][sanctpotname] > 0:
+                            has_sanctuary_support = True
+                
+                if has_sanctuary_support or self.clericon:
+                    # We have sanctuary support, just refresh when needed
+                    if "sanctuary" not in self.aff:
                         getsanc = True
-                        self.sys.stdout.write("\nWaiting sanc to run out...\n")
-                        self.time.sleep(self.aff['sanctuary']*3.1)
                 else:
-                    getsanc = True
+                    # Only wait if no sanctuary support available
+                    if "sanctuary" in self.aff:
+                        if self.aff['sanctuary'] < 30:
+                            getsanc = True
+                            self.sys.stdout.write("\nWaiting sanc to run out...\n")
+                            self.time.sleep(self.aff['sanctuary']*3.1)
+                    else:
+                        getsanc = True
 
                 getlvl = False
                 if "trollish vi" in self.aff:
@@ -154,6 +182,15 @@ class King:
                                     startfight = None
                                     break
                     if startfight != None:
+                        # Check if leveling spells need refreshing before combat
+                        self.check_affect()  # Update current spell durations
+                        needs_refresh, low_spells = self.check_leveling_spells()
+                        if needs_refresh:
+                            self.printc("Low critical spells detected before combat: %s" % ", ".join(low_spells), 'red')
+                            self.refresh_leveling_spells()
+                            self.printc("Spells refreshed, returning to King area...", 'green')
+                            return "continue"  # Stay in this area and re-evaluate
+                        
                         self.rod.write("kill %s\n"%(startfight)) 
                         self.target = startfight
                         self.fight = True

@@ -1,4 +1,5 @@
-import telnetlib, time
+from telnetlib_compat import Telnet
+import time
 import sys
 import threading
 from threading import Thread
@@ -111,7 +112,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
         
         
         if True:
-            self.rod = telnetlib.Telnet("realmsofdespair.com",4000)
+            self.rod = Telnet("realmsofdespair.com",4000)
 
 
             #create character if does not exist
@@ -1006,10 +1007,10 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                "colour spray",
                "spectral furor",
                 #"sulfurous spray",
+               "caustic fount",      # Priority spell - best damage for leveling
                "sonic resonance",
                "black fist",
                "ethereal fist",
-                "caustic fount",
                "magnetic thrust"]
 
         augurer = ["shocking grasp",'scorching surge','spiral blast']

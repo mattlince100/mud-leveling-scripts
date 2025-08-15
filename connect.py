@@ -1,4 +1,5 @@
-import telnetlib, time
+from telnetlib_compat import Telnet
+import time
 import sys
 import threading
 from threading import Thread
@@ -55,6 +56,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                         "amazon spear":"spear",
                         "katana":"katana",
                         "Shock Whip":"whip",
+                        "Neptune's Trident":"trident",
                         
         }
 
@@ -108,7 +110,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
         
         
         if True:
-            self.rod = telnetlib.Telnet("realmsofdespair.com",4000)
+            self.rod = Telnet("realmsofdespair.com",4000)
             
             # Monkey patch the write method to handle string encoding
             original_write = self.rod.write
@@ -620,7 +622,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                     if self.fight:
                         self.printc(ln.strip())
                     #print "***", [ln.strip()], self.fight
-                    if "PROMPT:" in ln:
+                    if "PROMPT:" in ln or "FPROMPT:" in ln:
                         try: 
                             self.HP, self.MAXHP = ln.split()[1][:-2].split("/")
                             self.MP, self.MAXMP = ln.split()[2][:-2].split("/")
@@ -643,6 +645,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                         if "FPROMPT:" in ln:
                             self.fight = True
                         else:
+                            self.fight = False
                             self.nofeed = False
                             if int(self.MP) < int(self.MAXMP)*0.7:
                                 if self.container in self.containers:
@@ -714,8 +717,26 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                 self.status = "restart"
             
             if self.user_input != None:
-                self.rod.write(self.user_input+'\n')
-                self.user_input = None
+                # Check for special debug commands
+                if self.user_input.lower() == "!refresh_spells":
+                    self.printc("DEBUG: Refreshing spell list...", 'cyan')
+                    self.check_prac()
+                    spell = self.find_attack()
+                    self.printc("DEBUG: New attack spell: %s" % spell, 'green')
+                    self.user_input = None
+                elif self.user_input.lower().startswith("!set_attack "):
+                    new_attack = self.user_input.split(" ", 1)[1]
+                    self.attack = new_attack
+                    self.printc("DEBUG: Attack manually set to: %s" % new_attack, 'green')
+                    self.user_input = None
+                elif self.user_input.lower() == "!debug_spells":
+                    spell = self.find_attack()
+                    self.printc("DEBUG: Current attack would be: %s" % spell, 'green')
+                    self.user_input = None
+                else:
+                    # Send normal commands to MUD
+                    self.rod.write(self.user_input+'\n')
+                    self.user_input = None
 
             time.sleep(.2)
 
@@ -759,7 +780,7 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
 
             for l in r.split("\n"):
                 self.check_disarm(l)
-                if "PROMPT:" in l:
+                if "PROMPT:" in l or "FPROMPT:" in l:
                     self.HP, self.MAXHP = l.strip().split()[1][:-2].split("/")
                     self.MP, self.MAXMP = l.strip().split()[2][:-2].split("/")
                     self.sys.stdout.write(r)
@@ -776,6 +797,22 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                         else:
                             self.rod.write("quaff purple %s\n"%self.container)
                     
+                # Check for fumbled sanctuary potion and re-quaff
+                if "Oops... a sanctuary potion is knocked from your hand and shatters!" in l:
+                    self.rod.write("quaff sanctuary %s\n"%self.container)
+                    self.printc("Fumbled sanctuary potion! Re-quaffing...", 'yellow')
+                
+                # Check for fly spell wearing off
+                if "You slowly float to the ground." in l:
+                    self.printc("DEBUG: Fly wore off! Level=%d" % self.level, 'yellow')
+                    if self.level >= 35:
+                        self.rod.write("say let me fly!\n")
+                        self.printc("Fly wore off! Requesting fly from cleric...", 'cyan')
+                    else:
+                        # Under level 35 - do nothing for now
+                        self.printc("Under level 35, not requesting fly yet", 'yellow')
+                        pass
+                
                 if "Your stomach cannot contain any more." in l:
                     self.rod.write('drink\n')
 
@@ -787,7 +824,8 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                     self.rod.write("flee\nquit\n")
                     self.status = "restart"
                 else:
-                    self.waitcmd(self.attack)
+                    # Send attack command directly without waiting for response
+                    self.rod.write("%s\n"%self.attack)
             self.start = time.time()
             
             return 2
@@ -1074,10 +1112,10 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                "colour spray",
                "spectral furor",
                 #"sulfurous spray",
+               "caustic fount",      # Priority spell - best damage for leveling
                "sonic resonance",
                "black fist",
                "ethereal fist",
-                "caustic fount",
                "magnetic thrust"]
 
         augurer = ["shocking grasp",'scorching surge','spiral blast']
@@ -1086,18 +1124,24 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
         vampire = ['chill touch', 
                    'shocking grasp',
                    ]
-        cleric = ['necromantic touch']
+        cleric = ['necromantic touch'] # Level 14 - main leveling spell
 
         fathomer = ['water spout']
         nephandi = ['nihil']
         spells = []
         print([self.charclass])
         if self.charclass == "Mage":
+            # Debug: Print available spells
+            mage_spells_known = []
             for x in self.slist:
                 if x[0] in mage and x[1] != '0':
                     spells.append(x[0])
+                    mage_spells_known.append(f"{x[0]}({x[1]}%)")
             
-            if len(spells) >= 2:
+            # Prefer caustic fount regardless of skill level if we know it
+            if 'caustic fount' in [x[0] for x in self.slist]:
+                spell = 'caustic fount'
+            elif len(spells) >= 2:
                 spell = spells[-2]
             elif len(spells) == 1:
                 spell = spells[0]
@@ -1345,7 +1389,52 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                 self.printc(rln[i])
                 if "Destre" in rln[i]:
                     self.time.sleep(1000000)
-                if  rln[i].strip().split()[0] not in ["Sigvald", "Anihprom", "Adnai","The", "A"]:
+                
+                # Check for trusted commands
+                char = rln[i].strip().split()[0]
+                trusted_chars = ["Malfian", "Meneleus", "Dresden", "Lore", "Kaan"]
+                
+                if char in trusted_chars:
+                    # Extract command from tell
+                    cmd = rln[i].split("tells you '")[-1].split("'")[0].strip()
+                    
+                    # List of allowed simple commands for safety
+                    allowed_commands = [
+                        "flee", "recall", "quit", "stand", "wake", "sleep", "rest",
+                        "wear all", "wear weapon", "wear nasr", "wear trident", "wear shield",
+                        "get all", "get all corpse", "save", "look", "glance", "score",
+                        "cast sanc", "quaff heal", "quaff purple", "quaff sanctuary",
+                        "say help", "say stuck", "drink", "eat turkey",
+                        "cast 'remove curse'", "supplicate recall"
+                    ]
+                    
+                    # Check if command is in allowed list or starts with allowed prefixes
+                    allowed_prefixes = ["wear ", "get ", "drop ", "say ", "tell ", "quaff "]
+                    
+                    if cmd in allowed_commands or any(cmd.startswith(prefix) for prefix in allowed_prefixes):
+                        self.printc("Executing trusted command from %s: %s" % (char, cmd), 'cyan')
+                        self.rod.write("%s\n" % cmd)
+                    elif cmd == "status":
+                        # Special command to report current status
+                        self.rod.write("say Status: %s, Level %d, Area: %s\n" % (self.status, self.level, self.area))
+                    elif cmd == "reset":
+                        # Reset spell waiting flags and get character moving again
+                        self.printc("Resetting character state from %s" % char, 'cyan')
+                        self.waiting_for_spell = False
+                        if hasattr(self, 'trollish_expired'):
+                            self.trollish_expired = True
+                        self.rod.write("say Reset complete - continuing\n")
+                        self.rod.write("stand\n")
+                    elif cmd == "continue":
+                        # Force continue from spell waiting
+                        self.printc("Forcing continue from %s" % char, 'cyan')
+                        self.waiting_for_spell = False
+                        self.rod.write("say Continuing without spell refresh\n")
+                    else:
+                        self.printc("Command not in allowed list: %s" % cmd, 'red')
+                        self.rod.write("tell %s Command '%s' not allowed\n" % (char, cmd))
+                
+                elif char not in ["Sigvald", "Anihprom", "Adnai","The", "A"]:
                     self.emergency_quit()
                     #self.time.sleep(60*30)
                     self.status = "quit"

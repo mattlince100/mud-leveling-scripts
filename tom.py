@@ -94,12 +94,26 @@ class Tom:
 
                 self.check_affect()
                 getsanc = False
-                if "sanctuary" in self.aff:
-                    if self.aff['sanctuary'] < 10:
-                        self.time.sleep(self.aff['sanctuary']*3.2)
+                # Skip sanctuary wait if we have potions or cleric
+                has_sanctuary_support = self.clericon
+                if self.level >= 10 and self.sect_member:
+                    sanctpotname = "a sanctuary potion"
+                    if sanctpotname in self.containers.get(self.container, {}):
+                        if self.containers[self.container][sanctpotname] > 0:
+                            has_sanctuary_support = True
+                
+                if has_sanctuary_support:
+                    # We have sanctuary support, just refresh when needed
+                    if "sanctuary" not in self.aff:
                         getsanc = True
                 else:
-                    getsanc = True
+                    # Only wait if no sanctuary support available
+                    if "sanctuary" in self.aff:
+                        if self.aff['sanctuary'] < 10:
+                            self.time.sleep(self.aff['sanctuary']*3.2)
+                            getsanc = True
+                    else:
+                        getsanc = True
 
                 if getsanc:
                     self.rod.write("quaff sanctuary %s\n"%self.container)
@@ -156,6 +170,19 @@ class Tom:
                                     startfight = None
                                     break
                     if startfight != None:
+                        # Check if leveling spells need refreshing before combat
+                        self.check_affect()  # Update current spell durations
+                        needs_refresh, low_spells = self.check_leveling_spells()
+                        if needs_refresh:
+                            self.printc("Low critical spells detected before combat: %s" % ", ".join(low_spells), 'red')
+                            self.refresh_leveling_spells()
+                            self.printc("Spells refreshed, returning to Temple of the Moon...", 'green')
+                            return "continue"  # Stay in this area and re-evaluate
+                        
+                        # Ensure spring exists in THIS room before attacking the mob
+                        self.printc("About to fight %s in %s - ensuring spring exists" % (startfight, self.location), 'gold')
+                        self.ensure_spring_exists()
+                        
                         self.rod.write("kill %s\n"%(startfight)) 
                         self.target = startfight
                         self.fight = True

@@ -135,15 +135,26 @@ class Coral:
 
                 self.check_affect()
                 getsanc = False
-                if "sanctuary" in self.aff:
-                    if self.aff['sanctuary'] < 10:
-                        self.time.sleep(self.aff['sanctuary']*3.2)
+                # Skip sanctuary wait if we have potions or cleric
+                has_sanctuary_support = self.clericon
+                if self.level >= 10 and self.sect_member:
+                    sanctpotname = "a sanctuary potion"
+                    if sanctpotname in self.containers.get(self.container, {}):
+                        if self.containers[self.container][sanctpotname] > 0:
+                            has_sanctuary_support = True
+                
+                if has_sanctuary_support:
+                    # We have sanctuary support, just refresh when needed
+                    if "sanctuary" not in self.aff:
                         getsanc = True
                 else:
-                    getsanc = True
-
-                if self.clericon:
-                    getsanc = False
+                    # Only wait if no sanctuary support available
+                    if "sanctuary" in self.aff:
+                        if self.aff['sanctuary'] < 10:
+                            self.time.sleep(self.aff['sanctuary']*3.2)
+                            getsanc = True
+                    else:
+                        getsanc = True
 
                 if getsanc and not self.fight:
                     self.check_spells()

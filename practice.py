@@ -1,4 +1,5 @@
-import telnetlib, time
+from telnetlib_compat import Telnet
+import time
 import sys
 import random
 
@@ -111,7 +112,7 @@ def get_hpmp(buf):
                 MP, maxMP = int(MP), int(maxMP)
 
 
-rod = telnetlib.Telnet("realmsofdespair.com",4000)
+rod = Telnet("realmsofdespair.com",4000)
 rod.write("%s\n"%user)
 rod.write("%s\n\n \n \nconfig -ansi\n"%(pw))
 waitcmd(rod,"cast 'dispel magic' self", p = True)

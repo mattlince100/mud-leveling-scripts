@@ -434,20 +434,21 @@ class dhaven:
                 self.status_msg  = "Getting leveling spells"
                 self.godh()
 
-                if True:
-                    self.go("nw;w;w;w")
-                #self.rod.write("say refresh\nsay level\nsay shields\nsay fly\n")
-                    #self.rod.write("say mspells\nsay cspells\n")
+                # Check if sect member - use house for spells
+                if self.level >= 10 and self.sect_member:
+                    # Go to sect house (not Darkhaven Square)
+                    self.rod.write("secthome\n")
+                    self.time.sleep(2)
                     self.rod.write("say buffs!\nsay shields!\n")
-                    sys.stdout.write("Waiting for level spells 30s...\n")
+                    sys.stdout.write("Waiting for level spells 40s...\n")
                     time.sleep(40)
                     self.check_affect()
-                    self.go("e;e;e;se")
-                #self.phase = 1  
+                    self.rod.write("jig\n")  # Return to DH square
                 else:
+                    # Use old location for pre-level 10 or non-sect members
                     self.go("nw;w;w;w")
                     self.rod.write("say buffs!\nsay shields!\n")
-                    sys.stdout.write("Waiting for level spells 30s...\n")
+                    sys.stdout.write("Waiting for level spells 40s...\n")
                     time.sleep(40)
                     self.check_affect()
                     self.go("e;e;e;se")
@@ -518,17 +519,30 @@ class dhaven:
                 
 
             getsanc = False
-            if "sanctuary" in self.aff:
-                tleft = self.aff['sanctuary'] 
-                
-                if tleft < 5:
-                    self.status_msg = "Waiting sanc to run out..."
-                    sys.stdout.write("waiting for sanc to run out...(%d)\n"%self.aff['sanctuary'])
-                    self.time.sleep(tleft*3.2)
+            # Skip sanctuary wait if we have sanctuary potions OR a cleric following
+            has_sanctuary_potions = False
+            if self.level >= 10 and self.sect_member:
+                sanctpotname = "a sanctuary potion"
+                if sanctpotname in self.containers.get(self.container, {}):
+                    if self.containers[self.container][sanctpotname] > 0:
+                        has_sanctuary_potions = True
+            
+            # Skip wait if we have potions OR cleric can cast sanctuary
+            if has_sanctuary_potions or self.clericon:
+                # We have sanctuary support, so just refresh immediately
+                if "sanctuary" not in self.aff:
                     getsanc = True
-                
             else:
-                getsanc = True
+                # Use old waiting logic only when no sanctuary support
+                if "sanctuary" in self.aff:
+                    tleft = self.aff['sanctuary'] 
+                    if tleft < 5:
+                        self.status_msg = "Waiting sanc to run out..."
+                        sys.stdout.write("waiting for sanc to run out...(%d)\n"%self.aff['sanctuary'])
+                        self.time.sleep(tleft*3.2)
+                        getsanc = True
+                else:
+                    getsanc = True
             
             if self.master != None:
                 getsanc = False
@@ -546,10 +560,18 @@ class dhaven:
                     self.time.sleep(3)
                 else:
                     self.godh()
-                    self.go("nw;w;w;w")
-                    self.rod.write("say #sanc\n")
-                    time.sleep(10) 
-                    self.go("e;e;e;se")
+                    # Check if sect member for spell room location
+                    if self.level >= 10 and self.sect_member:
+                        self.rod.write("secthome\n")
+                        self.time.sleep(2)
+                        self.rod.write("say #sanc\n")
+                        time.sleep(10)
+                        self.rod.write("jig\n")  # Return to DH square
+                    else:
+                        self.go("nw;w;w;w")
+                        self.rod.write("say #sanc\n")
+                        time.sleep(10) 
+                        self.go("e;e;e;se")
                 self.phase = 1
             
             self.check_affect()
@@ -562,11 +584,20 @@ class dhaven:
             if getheal and self.phase == 2:
                 self.status_msg= "Waiting for heals"
                 self.godh()
-                self.go("nw;w;w;w")
-                self.rod.write("say heal\n")
-                self.sys.stdout.write("waiting for heal...\n")
-                time.sleep(5)
-                self.go("e;e;e;se")
+                # Check if sect member for spell room location
+                if self.level >= 10 and self.sect_member:
+                    self.rod.write("secthome\n")
+                    self.time.sleep(2)
+                    self.rod.write("say heal\n")
+                    self.sys.stdout.write("waiting for heal...\n")
+                    time.sleep(5)
+                    self.rod.write("jig\n")  # Return to DH square
+                else:
+                    self.go("nw;w;w;w")
+                    self.rod.write("say heal\n")
+                    self.sys.stdout.write("waiting for heal...\n")
+                    time.sleep(5)
+                    self.go("e;e;e;se")
 
             getfly = False
             
@@ -612,10 +643,18 @@ class dhaven:
                         self.godh()
                     else:
                         self.godh()
-                        self.go("nw;w;w;w")
-                        self.rod.write("say #fly\n")
-                        self.time.sleep(5)
-                        self.go("e;e;e;se")
+                        # Check if sect member for spell room location
+                        if self.level >= 10 and self.sect_member:
+                            self.rod.write("secthome\n")
+                            self.time.sleep(2)
+                            self.rod.write("say #fly\n")
+                            self.time.sleep(5)
+                            self.rod.write("jig\n")  # Return to DH square
+                        else:
+                            self.go("nw;w;w;w")
+                            self.rod.write("say #fly\n")
+                            self.time.sleep(5)
+                            self.go("e;e;e;se")
                     
                 
                     self.phase = 1
@@ -721,9 +760,6 @@ class dhaven:
 
                 elif self.level <= 50:
                     self.switch += 1
-
-                    if self.random.random() < 0.08:
-                        return "coral"
                     
                     if self.level >= 28:
                         if self.random.random() < 0.5:

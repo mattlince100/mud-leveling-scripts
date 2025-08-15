@@ -1,4 +1,4 @@
-import telnetlib
+from telnetlib_compat import Telnet
 import sys
 import time
 
@@ -77,7 +77,7 @@ def isalone(buf):
 def gokill():
     global switch
     # connect
-    rod = telnetlib.Telnet("realmsofdespair.com",4000) 
+    rod = Telnet("realmsofdespair.com",4000) 
     rod.write("%s\n%s\n\n \n \n"%(user,pw))
     rod.write("config -ansi\nbear\n")
     log = []
@@ -382,7 +382,7 @@ def move(rod,direction):
 
 
 def midas():
-    rod2 = telnetlib.Telnet("realmsofdespair.com",4000)
+    rod2 = Telnet("realmsofdespair.com",4000)
     rod2.write("%s\n%s\n\n \n \n"%("Vaylis","1q2w3e4r"))
     r = rod2.read_very_eager()
     time.sleep(5)

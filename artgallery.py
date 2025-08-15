@@ -88,7 +88,7 @@ class Art:
                     self.cankill = ["anger","life","love","confusion"]
             
                 elif self.level <= 35:
-                    if self.random.random < 0.5:
+                    if self.random.random() < 0.5:
                         self.cankill = ["anger","life","love","confusion",'bronze']
                     else:
                         self.cankill = ["anger","life","love","confusion"]
@@ -132,6 +132,19 @@ class Art:
                 self.printc("GOING TO KILL %s..."%tokill)
                 if tokill == None:
                     return 'dhaven'
+                
+                # Check if leveling spells need refreshing before combat
+                self.check_affect()  # Update current spell durations
+                needs_refresh, low_spells = self.check_leveling_spells()
+                if needs_refresh:
+                    self.printc("Low spells detected: %s" % ", ".join(low_spells), 'red')
+                    # Save current location
+                    current_location = self.location
+                    # Refresh spells
+                    self.refresh_leveling_spells()
+                    # Return to Art Gallery
+                    self.printc("Returning to Art Gallery after spell refresh...", 'cyan')
+                    return 'art'  # Restart the art gallery function with fresh spells
 
                 if tokill in ["hand"]:
                     if self.level < 18:
@@ -236,14 +249,26 @@ class Art:
 
                 self.check_affect()
                 getsanc = False
-                if "sanctuary" in self.aff:
-                    if self.aff['sanctuary'] < 10:
-                        self.time.sleep(self.aff['sanctuary']*3.2)
+                # Skip sanctuary wait if we have potions or cleric
+                has_sanctuary_support = self.clericon
+                if self.level >= 10 and self.sect_member:
+                    sanctpotname = "a sanctuary potion"
+                    if sanctpotname in self.containers.get(self.container, {}):
+                        if self.containers[self.container][sanctpotname] > 0:
+                            has_sanctuary_support = True
+                
+                if has_sanctuary_support:
+                    # We have sanctuary support, just refresh when needed
+                    if "sanctuary" not in self.aff:
                         getsanc = True
                 else:
-                    getsanc = True
-                if self.clericon:
-                    getsanc = False
+                    # Only wait if no sanctuary support available
+                    if "sanctuary" in self.aff:
+                        if self.aff['sanctuary'] < 10:
+                            self.time.sleep(self.aff['sanctuary']*3.2)
+                            getsanc = True
+                    else:
+                        getsanc = True
                 getlvl = False
                 if "trollish vi" in self.aff:
                     if self.aff['trollish vi'] < 15:
@@ -294,6 +319,11 @@ class Art:
                 if alone:
                     for mob in mobs:
                         if mobs[mob] > 0 and mobnames[mob] in self.cankill:
+                            # Ensure spring exists in THIS room before attacking the mob
+                            self.printc("About to fight %s in %s - ensuring spring exists" % (mobnames[mob], self.location), 'gold')
+                            self.ensure_spring_exists()
+                            
+                            # Now attack normally - spring is verified to exist
                             self.rod.write("kill %s\n"%(mobnames[mob]))
                             self.target = mobnames[mob]
                             self.fight = True

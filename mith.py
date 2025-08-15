@@ -91,13 +91,27 @@ class Mithril:
                         return 'dhaven'
 
                 getsanc = False
-                if "sanctuary" in self.aff:
-                    if self.aff['sanctuary'] < 30:
+                # Skip sanctuary wait if we have potions or cleric
+                has_sanctuary_support = False
+                if self.level >= 10 and self.sect_member:
+                    sanctpotname = "a sanctuary potion"
+                    if sanctpotname in self.containers.get(self.container, {}):
+                        if self.containers[self.container][sanctpotname] > 0:
+                            has_sanctuary_support = True
+                
+                if has_sanctuary_support or self.clericon:
+                    # We have sanctuary support, just refresh when needed
+                    if "sanctuary" not in self.aff:
                         getsanc = True
-                        self.sys.stdout.write("\nWaiting sanc to run out...\n")
-                        self.time.sleep(self.aff['sanctuary']*3.1)
                 else:
-                    getsanc = True
+                    # Only wait if no sanctuary support available
+                    if "sanctuary" in self.aff:
+                        if self.aff['sanctuary'] < 30:
+                            getsanc = True
+                            self.sys.stdout.write("\nWaiting sanc to run out...\n")
+                            self.time.sleep(self.aff['sanctuary']*3.1)
+                    else:
+                        getsanc = True
 
                 getlvl = False
                 if "trollish vi" in self.aff:
@@ -164,6 +178,15 @@ class Mithril:
                                     startfight = None
                                     break
                     if startfight != None:
+                        # Check if leveling spells need refreshing before combat
+                        self.check_affect()  # Update current spell durations
+                        needs_refresh, low_spells = self.check_leveling_spells()
+                        if needs_refresh:
+                            self.printc("Low critical spells detected before combat: %s" % ", ".join(low_spells), 'red')
+                            self.refresh_leveling_spells()
+                            self.printc("Spells refreshed, returning to Mithril Hall...", 'green')
+                            return "continue"  # Stay in this area and re-evaluate
+                        
                         self.rod.write("kill %s\n"%(startfight)) 
                         self.target = startfight
                         self.fight = True
@@ -178,7 +201,7 @@ class Mithril:
             if not self.fight:
                 self.check_inv()
                 print(self.inv)
-                self.rod.write("put all.flask chest\n")
+                self.rod.write("put all.flask %s\n" % self.container)
                 d = self.phasedir[self.phase]
                 if "*" in d:
                     self.rod.write(d[1:]+'\n')

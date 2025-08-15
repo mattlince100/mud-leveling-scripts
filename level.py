@@ -1,6 +1,9 @@
 import time
 import sys
 import random
+from commands import Commands
+from checks import Checks
+from helper import Helper
 
 
 class Starting:
@@ -106,7 +109,7 @@ class Starting:
         
 
 
-class dhaven:
+class dhaven(Commands, Checks, Helper):
     ''' class for activities in dhaven '''
                
     switch_runs = 0 # keep track of runs
@@ -207,7 +210,21 @@ class dhaven:
                             self.rod.write("sleep\n")
                             self.printc("Waiting curse to wear off... it'll be a while\n")
                             self.status_msg = "Waiting curse to wear off"
-                            self.time.sleep(self.aff['curse']*3.1)
+                            
+                            # Break the wait into 10-second chunks and check if curse is still active
+                            total_wait = self.aff['curse']*3.1
+                            waited = 0
+                            while waited < total_wait:
+                                chunk_time = min(10, total_wait - waited)
+                                self.time.sleep(chunk_time)
+                                waited += chunk_time
+                                
+                                # Check if curse is still active
+                                self.check_affect()
+                                if "curse" not in self.aff:
+                                    self.printc("Curse removed! Continuing...", 'green')
+                                    break
+                            
                             self.rod.write("wake\n")                    
 
             print("LOCATION:",self.location)
@@ -481,56 +498,96 @@ class dhaven:
             #    getlvl = False
             #getlvl = False
             if getlvl and self.phase == 2:
+                # Re-check inventory before proceeding to avoid using stale data
+                self.printc("DEBUG: Re-checking inventory before getting leveling spells", 'cyan')
+                self.check_inv()
+                
                 sys.stdout.write("GETTING LVL...\n")
                 self.status_msg  = "Getting leveling spells"
                 self.godh()
 
                 # Check if sect member - use house for spells
+                self.printc("DEBUG: Spell location check - Level: %d, Sect member: %s" % (self.level, self.sect_member), 'cyan')
                 if self.level >= 10 and self.sect_member:
                     # Go to sect house (not Darkhaven Square)
+                    self.printc("DEBUG: Using secthome for spells", 'green')
                     self.rod.write("secthome\n")
                     self.time.sleep(2)
                     self.rod.write("say buffs!\nsay shields!\n")
-                    sys.stdout.write("Waiting for level spells 30s...\n")
-                    time.sleep(40)
+                    sys.stdout.write("Waiting for level spells 45s...\n")
+                    time.sleep(45)
                     self.check_affect()
+                    self.printc("DEBUG: Returning to DH square with jig", 'green')
+                    self.rod.write("jig\n")
                 else:
                     # Use old location for pre-level 10
+                    self.printc("DEBUG: Using old DH path for spells", 'red')
                     self.go("nw;w;w;w")
                     self.rod.write("say buffs!\nsay shields!\n")
-                    sys.stdout.write("Waiting for level spells 30s...\n")
-                    time.sleep(40)
+                    sys.stdout.write("Waiting for level spells 45s...\n")
+                    time.sleep(45)
                     self.check_affect()
                     self.go("e;e;e;se")
 
-            # Check sanctuary potions for sect members
+            # Check sanctuary and mana potions for sect members
             getsancpotions = False
+            getmanapotions = False
             if self.level >= 10 and self.sect_member:
+                # Always re-check inventory before potion calculations to avoid loops
+                self.printc("DEBUG: Checking current inventory for sect member potions", 'cyan')
+                self.check_inv()
                 sanctpotname = "a sanctuary potion"
                 if sanctpotname in self.containers[self.container]:
                     if self.containers[self.container][sanctpotname] < 5:
                         getsancpotions = True
                 else:
                     getsancpotions = True
+                
+                # Check mana potions (essence of forest + harvest melomel)
+                current_mana_total = 0
+                if "the essence of forest" in self.containers[self.container]:
+                    current_mana_total += self.containers[self.container]["the essence of forest"]
+                if "harvest melomel" in self.containers[self.container]:
+                    current_mana_total += self.containers[self.container]["harvest melomel"]
+                
+                if current_mana_total < 100:
+                    getmanapotions = True
+                    mana_needed = 100 - current_mana_total
+                    self.printc("DEBUG: Current mana potions: %d, need %d more" % (current_mana_total, mana_needed), 'yellow')
                     
-                if getsancpotions:
-                    self.status_msg = "Getting sanctuary potions"
+                if getsancpotions or getmanapotions:
+                    self.status_msg = "Getting sanctuary and mana potions"
                     # Go to sect house first
                     self.rod.write("secthome\n")
                     self.time.sleep(2)
                     # Go to potion storage room
                     self.go("d;d;s")
-                    # Fill container with 5 sanctuary potions
-                    num_needed = 5
-                    if sanctpotname in self.containers[self.container]:
-                        num_needed = 5 - self.containers[self.container][sanctpotname]
                     
-                    fill_command = "fill %s %d sanctuary-potion shelf-potion\n" % (self.container, num_needed)
-                    self.printc("DEBUG: Sanctuary potion command: %s" % fill_command.strip(), 'cyan')
-                    self.rod.write(fill_command)
-                    time.sleep(2)
+                    # Fill sanctuary potions if needed
+                    if getsancpotions:
+                        num_needed = 5
+                        if sanctpotname in self.containers[self.container]:
+                            num_needed = 5 - self.containers[self.container][sanctpotname]
+                        
+                        fill_command = "fill %s %d sanctuary-potion shelf-potion\n" % (self.container, num_needed)
+                        self.printc("DEBUG: Sanctuary potion command: %s" % fill_command.strip(), 'cyan')
+                        self.rod.write(fill_command)
+                        time.sleep(2)
+                    
+                    # Fill mana potions if needed (to reach 100 total)
+                    if getmanapotions:
+                        fill_command = "fill %s %d mana\n" % (self.container, mana_needed)
+                        self.printc("DEBUG: Mana potion command: %s (to reach 100 total)" % fill_command.strip(), 'cyan')
+                        self.rod.write(fill_command)
+                        time.sleep(3)  # Increased delay to ensure command completes
+                    
                     # Return to recall room (stay in sect house)
                     self.go("n;u;u")
+                    
+                    # Re-check inventory after filling potions
+                    if getsancpotions or getmanapotions:
+                        self.printc("DEBUG: Re-checking container inventory after potion fills", 'cyan')
+                        self.check_inv()
             
             getrecall = False
             # Sect members don't need recall scrolls - they use secthome
@@ -592,11 +649,18 @@ class dhaven:
                     
                     # Handle healing potions from shell at recall room
                     if getpotion:
-                        heal_needed = int(potreq)
-                        fill_command = "fill %s %d heal-potion shell" % (self.container, heal_needed)
-                        self.printc("DEBUG: Healing potion command: %s" % fill_command, 'cyan')
-                        self.rod.write(fill_command + "\n")
-                        self.time.sleep(2)
+                        # Calculate delta needed (target - current amount)
+                        current_amount = self.containers[self.container].get(self.potname, 0)
+                        heal_needed = max(int(potreq) - current_amount, 0)
+                        
+                        if heal_needed > 0:
+                            fill_command = "fill %s %d heal-potion shell" % (self.container, heal_needed)
+                            self.printc("DEBUG: Have %d heals, need %d more to reach %d total" % (current_amount, heal_needed, int(potreq)), 'cyan')
+                            self.printc("DEBUG: Healing potion command: %s" % fill_command, 'cyan')
+                            self.rod.write(fill_command + "\n")
+                            self.time.sleep(2)
+                        else:
+                            self.printc("DEBUG: Already have enough healing potions (%d), skipping fill" % current_amount, 'cyan')
                     
                     # Handle mana potions from potion room floor
                     if getpotionmana and self.level >= 7:
@@ -619,11 +683,19 @@ class dhaven:
                         if getpotionmana:
                             self.buyblue()
                         if getpotion:
-                            if potreq > 20:
-                                for i in range(max([int(potreq/20)-1,0])):
-                                    self.rod.write("buy %s %s\nempty bag %s\ndrop bag\n"%(20, self.potname.split()[2],self.container))
+                            # Calculate delta needed (target - current amount)
+                            current_amount = self.containers[self.container].get(self.potname, 0)
+                            heal_needed = max(int(potreq) - current_amount, 0)
+                            
+                            if heal_needed > 0:
+                                self.printc("DEBUG: Have %d heals, need %d more to reach %d total" % (current_amount, heal_needed, int(potreq)), 'cyan')
+                                if heal_needed > 20:
+                                    for i in range(max([int(heal_needed/20)-1,0])):
+                                        self.rod.write("buy %s %s\nempty bag %s\ndrop bag\n"%(20, self.potname.split()[2],self.container))
+                                else:
+                                    self.rod.write("buy %s %s\nempty bag %s\ndrop bag\n"%(heal_needed, self.potname.split()[2],self.container))
                             else:
-                                self.rod.write("buy %s %s\nempty bag %s\ndrop bag\n"%(20, self.potname.split()[2],self.container))
+                                self.printc("DEBUG: Already have enough healing potions (%d), skipping buy" % current_amount, 'cyan')
                     else:
                         self.buypurple()
                     
@@ -675,17 +747,34 @@ class dhaven:
                 
 
             getsanc = False
-            if "sanctuary" in self.aff:
-                tleft = self.aff['sanctuary'] 
-                
-                if tleft < 30:
-                    self.status_msg = "Waiting sanc to run out..."
-                    sys.stdout.write("waiting for sanc to run out...(%d)\n"%self.aff['sanctuary'])
-                    self.time.sleep(tleft*3.2)
+            # Skip sanctuary wait if we have sanctuary potions OR a cleric following
+            has_sanctuary_potions = False
+            if self.level >= 10 and self.sect_member:
+                sanctpotname = "a sanctuary potion"
+                if sanctpotname in self.containers.get(self.container, {}):
+                    if self.containers[self.container][sanctpotname] > 0:
+                        has_sanctuary_potions = True
+                        self.printc("DEBUG: Has %d sanctuary potions" % self.containers[self.container][sanctpotname], 'cyan')
+                else:
+                    self.printc("DEBUG: No sanctuary potions found in %s" % self.container, 'yellow')
+            
+            # Skip wait if we have potions OR cleric can cast sanctuary
+            self.printc("DEBUG: Sanctuary check - Has potions: %s, Cleric on: %s" % (has_sanctuary_potions, self.clericon), 'cyan')
+            if has_sanctuary_potions or self.clericon:
+                # We have sanctuary support, so just refresh immediately
+                if "sanctuary" not in self.aff:
                     getsanc = True
-                
             else:
-                getsanc = True
+                # Use old waiting logic only when no sanctuary support
+                if "sanctuary" in self.aff:
+                    tleft = self.aff['sanctuary'] 
+                    if tleft < 30:
+                        self.status_msg = "Waiting sanc to run out..."
+                        sys.stdout.write("waiting for sanc to run out...(%d)\n"%self.aff['sanctuary'])
+                        self.time.sleep(tleft*3.2)
+                        getsanc = True
+                else:
+                    getsanc = True
             
             if self.master != None:
                 getsanc = False
@@ -969,9 +1058,6 @@ class dhaven:
 
                 elif self.level <= 50:
                     self.switch += 1
-
-                    if self.random.random() < 0.08:
-                        return "coral"
                     
                     if self.level >= 28:
                         if self.random.random() < 0.5:
@@ -1000,19 +1086,13 @@ class dhaven:
                         else:
                             return "art"
                     else:
-                        #if self.switch % 4 == 0:
-                        #    return "king"
-                        #elif self.switch % 4 == 2:
-                        #    return "canyon"
-                        #else:
-                        #    return "king"
-
-
-
-                        if self.switch % 2 == 0:
+                        # Levels 43+ (including 46-49): rotate between king, art, and winterlight
+                        if self.switch % 3 == 0:
                             return "king"
-                        elif self.switch % 2 == 1:
+                        elif self.switch % 3 == 1:
                             return "art"
+                        else:
+                            return "winter"
                     
                         
                 else:

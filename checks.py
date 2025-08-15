@@ -1,4 +1,4 @@
-import telnetlib
+from telnetlib_compat import Telnet
 
 class Checks:
     pcontainers = ['my.basket','my.draco','my.container', 'my.case']
@@ -128,8 +128,8 @@ class Checks:
             self.check_disarm(bsplt[i])
             
             if "Deity:" in bsplt[i]:
-	        	self.deity = bsplt[i].split("Deity:")[-1].split()[0].strip()
-	        	self.favor = bsplt[i].split("Favor:")[-1].split()[0].strip()
+                self.deity = bsplt[i].split("Deity:")[-1].split()[0].strip()
+                self.favor = bsplt[i].split("Favor:")[-1].split()[0].strip()
 
             elif "Sect:" in bsplt[i]:
                 sect_name = bsplt[i].split("Sect:")[-1].strip()
@@ -314,8 +314,8 @@ class Checks:
 
     def printeq(self):
         self.survey()
-    	for eq, dam in self.eqdam:
-    		self.printc('[%.10s]\t\t%s'%(dam, eq),'gold')
+        for eq, dam in self.eqdam:
+            self.printc('[%.10s]\t\t%s'%(dam, eq),'gold')
 
     def get_loc(self, p = False):
         for tries in range(5):
