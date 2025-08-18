@@ -188,11 +188,13 @@ class dhaven:
                         self.time.sleep(5)
                         self.check_affect()
                         if "curse" in self.aff:
+                            self.sleeping_for_curse = True  # Flag that we're intentionally sleeping
                             self.rod.write("sleep\n")
                             self.printc("Waiting curse to wear off... it'll be a while\n")
                             self.status_msg = "Waiting curse to wear off"
                             self.time.sleep(self.aff['curse']*3.1)
-                            self.rod.write("wake\n")                    
+                            self.rod.write("wake\n")
+                            self.sleeping_for_curse = False  # Clear the flag when waking up                    
 
             print "LOCATION:",self.location
             if self.location in ["A watery tangle of caves",'The bottom of the vortex', 'A Dark passage','Surrounded in dark water','An escape??','A dark cave']:

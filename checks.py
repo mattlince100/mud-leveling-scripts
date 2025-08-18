@@ -34,6 +34,7 @@ class Checks:
             'harvest melomel':("mana",100),
             'a glowing blue potion':("blue",100),
             'a sanctuary potion':("sanctuary",100),
+            'a fly potion':("fly",100),
             }
         
         self.pots = {}

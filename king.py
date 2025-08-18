@@ -77,6 +77,7 @@ class King:
                     if self.clericon:
                         self.cleric.rod.write("c 'remove curse' %s\n"%self.name)
                     elif self.charclass != "Barbarian":
+                        self.sleeping_for_curse = True  # Flag that we're intentionally sleeping
                         self.rod.write("sleep\n")
                         
                         # Break the wait into 10-second chunks and check if curse is still active
@@ -94,6 +95,7 @@ class King:
                                 break
                         
                         self.rod.write("wake\n")
+                        self.sleeping_for_curse = False  # Clear the flag when waking up
                         return 'dhaven'
 
                 getsanc = False

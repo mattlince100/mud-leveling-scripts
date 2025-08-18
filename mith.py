@@ -85,9 +85,11 @@ class Mithril:
                     if self.clericon:
                         self.cleric.rod.write("c 'remove curse' %s\n"%self.name)
                     else:
+                        self.sleeping_for_curse = True  # Flag that we're intentionally sleeping
                         self.rod.write("sleep\n")
                         self.time.sleep(self.aff['curse']*3.1)
                         self.rod.write("wake\n")
+                        self.sleeping_for_curse = False  # Clear the flag when waking up
                         return 'dhaven'
 
                 getsanc = False

@@ -207,6 +207,7 @@ class dhaven(Commands, Checks, Helper):
                         self.time.sleep(5)
                         self.check_affect()
                         if "curse" in self.aff:
+                            self.sleeping_for_curse = True  # Flag that we're intentionally sleeping
                             self.rod.write("sleep\n")
                             self.printc("Waiting curse to wear off... it'll be a while\n")
                             self.status_msg = "Waiting curse to wear off"
@@ -225,7 +226,8 @@ class dhaven(Commands, Checks, Helper):
                                     self.printc("Curse removed! Continuing...", 'green')
                                     break
                             
-                            self.rod.write("wake\n")                    
+                            self.rod.write("wake\n")
+                            self.sleeping_for_curse = False  # Clear the flag when waking up                    
 
             print("LOCATION:",self.location)
             if self.location in ["A watery tangle of caves",'The bottom of the vortex', 'A Dark passage','Surrounded in dark water','An escape??','A dark cave']:
@@ -542,6 +544,16 @@ class dhaven(Commands, Checks, Helper):
                         getsancpotions = True
                 else:
                     getsancpotions = True
+                    
+                # Check fly potions (for levels 2-34)
+                getflypotions = False
+                if self.level >= 2 and self.level < 35:
+                    flypotname = "a fly potion"
+                    if flypotname in self.containers[self.container]:
+                        if self.containers[self.container][flypotname] < 5:
+                            getflypotions = True
+                    else:
+                        getflypotions = True
                 
                 # Check mana potions (essence of forest + harvest melomel)
                 current_mana_total = 0
@@ -555,11 +567,21 @@ class dhaven(Commands, Checks, Helper):
                     mana_needed = 100 - current_mana_total
                     self.printc("DEBUG: Current mana potions: %d, need %d more" % (current_mana_total, mana_needed), 'yellow')
                     
-                if getsancpotions or getmanapotions:
-                    self.status_msg = "Getting sanctuary and mana potions"
+                if getsancpotions or getmanapotions or getflypotions:
+                    self.status_msg = "Getting sanctuary, fly, and mana potions"
                     # Go to sect house first
                     self.rod.write("secthome\n")
                     self.time.sleep(2)
+                    
+                    # Check if level 35+ and need to get the magical flying carpet (one-time pickup)
+                    if self.level >= 35 and not self.alt_info.get("has_carpet", False):
+                        self.printc("Level 35 detected! Getting magical flying carpet from reliquary...", 'gold')
+                        self.rod.write("get carpet reliquary\n")
+                        self.time.sleep(2)
+                        # Mark that we've obtained the carpet
+                        self.alt_info["has_carpet"] = True
+                        self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'wb'))
+                        self.printc("Obtained magical flying carpet! You can now say 'let me fly!' to activate it.", 'green')
                     # Go to potion storage room
                     self.go("d;d;s")
                     
@@ -571,6 +593,17 @@ class dhaven(Commands, Checks, Helper):
                         
                         fill_command = "fill %s %d sanctuary-potion shelf-potion\n" % (self.container, num_needed)
                         self.printc("DEBUG: Sanctuary potion command: %s" % fill_command.strip(), 'cyan')
+                        self.rod.write(fill_command)
+                        time.sleep(2)
+                        
+                    # Fill fly potions if needed (for levels 2-34)
+                    if getflypotions:
+                        num_needed = 5
+                        if 'flypotname' in locals() and flypotname in self.containers[self.container]:
+                            num_needed = 5 - self.containers[self.container][flypotname]
+                        
+                        fill_command = "fill %s %d fly-potion shelf-potion\n" % (self.container, num_needed)
+                        self.printc("DEBUG: Fly potion command: %s" % fill_command.strip(), 'cyan')
                         self.rod.write(fill_command)
                         time.sleep(2)
                     
@@ -646,6 +679,16 @@ class dhaven(Commands, Checks, Helper):
                     # Go to sect house recall room
                     self.rod.write("secthome\n")
                     self.time.sleep(2)
+                    
+                    # Check if level 35+ and need to get the magical flying carpet (one-time pickup)
+                    if self.level >= 35 and not self.alt_info.get("has_carpet", False):
+                        self.printc("Level 35 detected! Getting magical flying carpet from reliquary...", 'gold')
+                        self.rod.write("get carpet reliquary\n")
+                        self.time.sleep(2)
+                        # Mark that we've obtained the carpet
+                        self.alt_info["has_carpet"] = True
+                        self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'wb'))
+                        self.printc("Obtained magical flying carpet! You can now say 'let me fly!' to activate it.", 'green')
                     
                     # Handle healing potions from shell at recall room
                     if getpotion:

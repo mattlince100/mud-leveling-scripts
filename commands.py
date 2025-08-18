@@ -784,6 +784,16 @@ class Commands:
         self.rod.write("secthome\n")
         self.time.sleep(2)
         
+        # Check if level 35+ and need to get the magical flying carpet (one-time pickup)
+        if self.level >= 35 and not self.alt_info.get("has_carpet", False):
+            self.printc("Level 35 detected! Getting magical flying carpet from reliquary...", 'gold')
+            self.rod.write("get carpet reliquary\n")
+            self.time.sleep(2)
+            # Mark that we've obtained the carpet
+            self.alt_info["has_carpet"] = True
+            self.pickle.dump(self.alt_info, open("alts/info_%s.pckle"%self.name,'wb'))
+            self.printc("Obtained magical flying carpet! You can now say 'let me fly!' to activate it.", 'green')
+        
         # Calculate healing potions needed (target 15 for mages due to weight constraints)
         target_heals = 15 if self.charclass == "Mage" else 20
         heal_amount = max(target_heals - current_heal_total, 0)
@@ -809,6 +819,12 @@ class Commands:
         self.printc("Topping up sanctuary potions...", 'cyan')
         self.rod.write("fill %s 5 sanctuary-potion shelf-potion\n" % self.container)
         self.time.sleep(2)
+        
+        # Top up fly potions for characters under level 35
+        if self.level >= 2 and self.level < 35:
+            self.printc("Topping up fly potions...", 'cyan')
+            self.rod.write("fill %s 5 fly-potion shelf-potion\n" % self.container)
+            self.time.sleep(2)
         
         # Return to recall room
         self.go("n;u;u")

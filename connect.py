@@ -808,10 +808,32 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                     if self.level >= 35:
                         self.rod.write("say let me fly!\n")
                         self.printc("Fly wore off! Requesting fly from cleric...", 'cyan')
+                    elif self.level >= 2 and self.level < 35:
+                        # Check if we have fly potions available
+                        flypotname = "a fly potion"
+                        if flypotname in self.containers.get(self.container, {}):
+                            if self.containers[self.container][flypotname] > 0:
+                                self.rod.write("quaff fly %s\n" % self.container)
+                                self.printc("Fly wore off! Quaffing fly potion...", 'cyan')
+                            else:
+                                self.printc("Fly wore off but no fly potions available!", 'red')
+                        else:
+                            self.printc("Fly wore off but no fly potions in container!", 'red')
+                            
+                # Check for fumbled fly potion and re-quaff
+                if "Oops... a fly potion is knocked from your hand and shatters!" in l:
+                    self.rod.write("quaff fly %s\n"%self.container)
+                    self.printc("Fumbled fly potion! Re-quaffing...", 'yellow')
+                    
+                # Check if character is unexpectedly sleeping
+                if "In your dreams, or what?" in l:
+                    # Check if we're intentionally sleeping for curse removal
+                    if hasattr(self, 'sleeping_for_curse') and self.sleeping_for_curse:
+                        self.printc("Sleeping intentionally for curse removal...", 'yellow')
                     else:
-                        # Under level 35 - do nothing for now
-                        self.printc("Under level 35, not requesting fly yet", 'yellow')
-                        pass
+                        self.printc("WARNING: Character is sleeping unexpectedly! Waking up...", 'red')
+                        self.rod.write("wake\n")
+                        self.time.sleep(1)
                 
                 if "Your stomach cannot contain any more." in l:
                     self.rod.write('drink\n')
@@ -1127,7 +1149,10 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
         cleric = ['necromantic touch'] # Level 14 - main leveling spell
 
         fathomer = ['water spout']
-        nephandi = ['nihil']
+        # Nephandi spells by level priority
+        nephandi = ['acid blast',      # Level 41+
+                    'umbral spear',     # Level 30+
+                    'nihil']            # Level 14+
         spells = []
         print([self.charclass])
         if self.charclass == "Mage":
@@ -1149,16 +1174,36 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                 return None
             return "cast \"%s\""%spell
         elif self.charclass == "Nephandi":
+            # Check for nephandi-specific spells
             for x in self.slist:
                 if x[0] in nephandi and x[1] != '0':
                     spells.append(x[0])
-            if len(spells) == 1:
-                spell = spells[-1]
-            elif len(spells) >= 2:
-                spell = spells[-2]
+            
+            # Select spell based on level and availability
+            if 'acid blast' in spells and self.level >= 41:
+                spell = 'acid blast'
+            elif 'umbral spear' in spells and self.level >= 30:
+                spell = 'umbral spear'
+            elif 'nihil' in spells and self.level >= 14:
+                spell = 'nihil'
+            elif self.level >= 20:
+                # Use spinkick as fallback at level 20+
+                return "spinkick"
+            elif self.level < 14:
+                # Use strike for levels below 14
+                return "strike"
             else:
-                return None
-            return "cast \"%s\""%spell
+                # Between 14-20, use nihil if available, otherwise strike
+                if 'nihil' in spells:
+                    spell = 'nihil'
+                else:
+                    return "strike"
+                    
+            if 'spell' in locals():
+                return "cast \"%s\""%spell
+            else:
+                # Fallback to strike if no spells available
+                return "strike"
         elif self.charclass == "Fathomer":
             for x in self.slist:
                 if x[0] in fathomer and x[1] != '0':

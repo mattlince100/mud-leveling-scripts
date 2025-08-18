@@ -75,15 +75,32 @@ class Coral:
                     getspells = False
 
             
-            self.go("nw;w;w;w")
-            if getspells:
-                self.sys.stdout.write("GETTING SPELLS...\n")
-                self.rod.write("say refresh\nsay aqua\n")
-                self.time.sleep(15)
-            if self.support != None:
-                self.support.rod.write("say refresh\n")
-            self.time.sleep(4)
-            self.go("e;e;e;se")
+            # Go to appropriate spell room based on sect membership
+            if self.level >= 10 and hasattr(self, 'sect_member') and self.sect_member:
+                # Sect members use secthome
+                self.rod.write("secthome\n")
+                self.time.sleep(2)
+                if getspells:
+                    self.sys.stdout.write("GETTING SPELLS (sect house)...\n")
+                    self.rod.write("say refresh\nsay aqua\n")
+                    self.time.sleep(15)
+                if self.support != None:
+                    self.support.rod.write("say refresh\n")
+                self.time.sleep(4)
+                # Return to DH square from sect house
+                self.rod.write("jig\n")
+                self.time.sleep(2)
+            else:
+                # Non-sect members use regular spell room
+                self.go("nw;w;w;w")
+                if getspells:
+                    self.sys.stdout.write("GETTING SPELLS...\n")
+                    self.rod.write("say refresh\nsay aqua\n")
+                    self.time.sleep(15)
+                if self.support != None:
+                    self.support.rod.write("say refresh\n")
+                self.time.sleep(4)
+                self.go("e;e;e;se")
             self.go("#6 s;ne;s;s;se;e;e;s;sw;sw;s;e;e;u;#3 e;ne;e;e;e;s;se;s;e;e;s;e;e;enter;s;s;s;se;s;d;d;d")
 
             self.whereami()

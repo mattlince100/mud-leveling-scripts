@@ -12,10 +12,21 @@ class Toz:
             self.phase = 1
             # go to TOZ                                                                                                                                                                                                                                                                                                                                                                                                      
             self.godh()
-            self.go("nw;w;w;w")
-            self.rod.write("say refresh\n")
-            self.time.sleep(2)
-            self.go("e;e;e;se")                
+            # Use appropriate spell room based on sect membership
+            if self.level >= 10 and hasattr(self, 'sect_member') and self.sect_member:
+                # Sect members use secthome
+                self.rod.write("secthome\n")
+                self.time.sleep(2)
+                self.rod.write("say refresh\n")
+                self.time.sleep(2)
+                self.rod.write("jig\n")  # Return to DH square
+                self.time.sleep(2)
+            else:
+                # Non-sect members use regular spell room
+                self.go("nw;w;w;w")
+                self.rod.write("say refresh\n")
+                self.time.sleep(2)
+                self.go("e;e;e;se")                
             self.go("#6 n;#3 nw;w;n;#4 e;s;w;sw;s;sw;s;s;e;se;se;#4 e;n;nw;n;n;sw;e;ne;s;s;se;s;se;s;e;e;se;ne")
             self.rod.write("give 100 coin boy\nn\n")
 
