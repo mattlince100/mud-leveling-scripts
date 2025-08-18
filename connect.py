@@ -804,21 +804,32 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                 
                 # Check for fly spell wearing off
                 if "You slowly float to the ground." in l:
-                    self.printc("DEBUG: Fly wore off! Level=%d" % self.level, 'yellow')
+                    self.printc("DEBUG: Fly wore off! Level=%d, Container=%s" % (self.level, self.container), 'yellow')
+                    self.printc("DEBUG: Available containers: %s" % list(self.containers.keys()), 'yellow')
                     if self.level >= 35:
                         self.rod.write("say let me fly!\n")
                         self.printc("Fly wore off! Requesting fly from cleric...", 'cyan')
                     elif self.level >= 2 and self.level < 35:
                         # Check if we have fly potions available
                         flypotname = "a fly potion"
-                        if flypotname in self.containers.get(self.container, {}):
-                            if self.containers[self.container][flypotname] > 0:
-                                self.rod.write("quaff fly %s\n" % self.container)
-                                self.printc("Fly wore off! Quaffing fly potion...", 'cyan')
+                        self.printc("DEBUG: Checking for '%s' in container '%s'" % (flypotname, self.container), 'yellow')
+                        if self.container in self.containers:
+                            container_contents = self.containers[self.container]
+                            self.printc("DEBUG: Container contents: %s" % list(container_contents.keys()), 'yellow')
+                            if flypotname in container_contents:
+                                potion_count = container_contents[flypotname]
+                                self.printc("DEBUG: Found %d fly potions in container" % potion_count, 'yellow')
+                                if potion_count > 0:
+                                    self.rod.write("quaff fly %s\n" % self.container)
+                                    self.printc("Fly wore off! Quaffing fly potion... (%d left)" % (potion_count-1), 'cyan')
+                                else:
+                                    self.printc("Fly wore off but no fly potions available! (count=0)", 'red')
                             else:
-                                self.printc("Fly wore off but no fly potions available!", 'red')
+                                self.printc("DEBUG: Fly potion '%s' not found in container contents" % flypotname, 'red')
+                                self.printc("Fly wore off but no fly potions in container!", 'red')
                         else:
-                            self.printc("Fly wore off but no fly potions in container!", 'red')
+                            self.printc("DEBUG: Container '%s' not found in containers dict" % self.container, 'red')
+                            self.printc("Fly wore off but container not loaded!", 'red')
                             
                 # Check for fumbled fly potion and re-quaff
                 if "Oops... a fly potion is knocked from your hand and shatters!" in l:
@@ -834,6 +845,16 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                         self.printc("WARNING: Character is sleeping unexpectedly! Waking up...", 'red')
                         self.rod.write("wake\n")
                         self.time.sleep(1)
+                
+                # Emergency fly check for characters without fly (debugging)
+                if self.level >= 2 and self.level < 35 and "PROMPT:" in l:
+                    self.check_affect()
+                    if 'fly' not in self.aff:
+                        flypotname = "a fly potion"
+                        if self.container in self.containers and flypotname in self.containers[self.container]:
+                            if self.containers[self.container][flypotname] > 0:
+                                self.printc("EMERGENCY: No fly detected! Quaffing fly potion immediately!", 'red')
+                                self.rod.write("quaff fly %s\n" % self.container)
                 
                 if "Your stomach cannot contain any more." in l:
                     self.rod.write('drink\n')
