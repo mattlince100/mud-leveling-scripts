@@ -334,11 +334,14 @@ class Commands:
         needs_refresh = False
         low_spells = []
         
-        # Only check the two critical leveling spells
+        # Only check trollish vigor as critical - fly is handled by potions for levels 2-34
         critical_spells = {
             'trollish vi': 50,    # Trollish vigor - most important for leveling
-            'fly': 50,            # Flying - required for movement in many areas
         }
+        
+        # For characters 35+ or without fly potions, also check fly spell
+        if self.level >= 35 or (self.level >= 2 and self.level < 35 and not self._has_fly_potions()):
+            critical_spells['fly'] = 50
         
         # Check each spell
         for spell, threshold in critical_spells.items():
@@ -348,10 +351,30 @@ class Commands:
                     low_spells.append("%s (%d rounds left)" % (spell, self.aff[spell]))
                     self.printc("Critical spell running low: %s has only %d rounds remaining" % (spell, self.aff[spell]), 'yellow')
         
+        # Special handling for fly potions (levels 2-34)
+        if self.level >= 2 and self.level < 35:
+            if self._has_fly_potions():
+                # Check if fly is low or missing entirely
+                if 'fly' in self.aff and self.aff['fly'] < 50:
+                    self.printc("Fly running low (%d rounds) - quaffing fly potion instead of spell refresh" % self.aff['fly'], 'cyan')
+                    self.rod.write("quaff fly %s\n" % self.container)
+                    self.printc("Quaffed fly potion proactively!", 'cyan')
+                elif 'fly' not in self.aff:
+                    self.printc("No fly spell detected - quaffing fly potion immediately!", 'yellow')
+                    self.rod.write("quaff fly %s\n" % self.container)
+                    self.printc("Quaffed fly potion to restore flying!", 'green')
+        
         return needs_refresh, low_spells
     
+    def _has_fly_potions(self):
+        """Check if character has fly potions available"""
+        flypotname = "a fly potion"
+        if flypotname in self.containers.get(self.container, {}):
+            return self.containers[self.container][flypotname] > 0
+        return False
+    
     def refresh_leveling_spells(self):
-        """Return to recall room, wait for trollish vigor to expire, then refresh all leveling spells"""
+        """Return to recall room and refresh only the spells that need refreshing"""
         self.printc("Refreshing critical leveling spells before continuing combat...", 'gold')
         self.status_msg = "Refreshing leveling spells"
         
@@ -367,24 +390,44 @@ class Commands:
             self.godh()
             self.go("nw;w;w;w")
         
-        # Check if we have trollish vigor and wait for it to expire for clean refresh
+        # Check which spells need refreshing
         self.check_affect()
-        if 'trollish vi' in self.aff and self.aff['trollish vi'] > 0:
+        need_troll = 'trollish vi' not in self.aff or self.aff.get('trollish vi', 0) < 100
+        need_fly = 'fly' not in self.aff or self.aff.get('fly', 0) < 100
+        
+        # Only wait for trollish vigor to expire if we actually need to refresh it
+        if need_troll and 'trollish vi' in self.aff and self.aff['trollish vi'] > 0:
             troll_rounds = self.aff['trollish vi']
-            wait_time = int(troll_rounds * 3)  # Each round is ~3 seconds
-            self.printc("Waiting %d seconds for trollish vigor (%d rounds) to expire for clean refresh..." % (wait_time, troll_rounds), 'yellow')
-            self.time.sleep(wait_time + 5)  # Add 5 seconds buffer
-            
-        # Now request all buffs and shields for a clean slate
-        if self.level >= 10 and hasattr(self, 'sect_member') and self.sect_member:
-            self.printc("Requesting full spell refresh from sect bots...", 'cyan')
-            self.rod.write("say buffs!\nsay shields!\n")
+            # Only wait if trollish vigor has less than 100 rounds (5 minutes) left
+            if troll_rounds < 100:
+                wait_time = int(troll_rounds * 3)  # Each round is ~3 seconds
+                self.printc("Waiting %d seconds for trollish vigor (%d rounds) to expire..." % (wait_time, troll_rounds), 'yellow')
+                self.time.sleep(wait_time + 5)  # Add 5 seconds buffer
+                need_troll = True
+            else:
+                # Trollish vigor is fine, don't refresh it
+                need_troll = False
+                self.printc("Trollish vigor has %d rounds, skipping refresh" % troll_rounds, 'green')
+        
+        # Request only the spells we need
+        if need_fly and not need_troll:
+            # Just need fly
+            self.printc("Requesting fly spell refresh only...", 'cyan')
+            self.rod.write("say #fly\n")
+            self.printc("Waiting 10 seconds for fly spell...", 'cyan')
+            self.time.sleep(10)
+        elif need_troll:
+            # Need full refresh (trollish vigor expired/low)
+            if self.level >= 10 and hasattr(self, 'sect_member') and self.sect_member:
+                self.printc("Requesting full spell refresh from sect bots...", 'cyan')
+                self.rod.write("say buffs!\nsay shields!\n")
+            else:
+                self.printc("Requesting full spell refresh from Darkhaven bots...", 'cyan')
+                self.rod.write("say buffs!\nsay shields!\n")
+            self.printc("Waiting 45 seconds for all spells to be cast...", 'cyan')
+            self.time.sleep(45)
         else:
-            self.printc("Requesting full spell refresh from Darkhaven bots...", 'cyan')
-            self.rod.write("say buffs!\nsay shields!\n")
-            
-        self.printc("Waiting 45 seconds for all spells to be cast...", 'cyan')
-        self.time.sleep(45)
+            self.printc("All critical spells are fine, no refresh needed!", 'green')
         
         # Navigate back if in Darkhaven
         if not (self.level >= 10 and hasattr(self, 'sect_member') and self.sect_member):
