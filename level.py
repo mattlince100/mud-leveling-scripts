@@ -1052,7 +1052,7 @@ class dhaven(Commands, Checks, Helper):
                             self.alt_info['buffer'] = set()
                             self.alt_info['kills'] = {}
 
-                if len(self.alt_info['buffer']) >= 23:
+                if len(self.alt_info['buffer']) >= 25:
                     self.alt_info["clearbuffer"] = False
                     self.alt_info['buffer'] = set()
                     self.alt_info['kills'] = {}
