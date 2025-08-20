@@ -193,6 +193,9 @@ class King:
                             self.printc("Spells refreshed, returning to King area...", 'green')
                             return "continue"  # Stay in this area and re-evaluate
                         
+                        # Check and maintain sanctuary, fly, and other spells before combat
+                        self.check_spells()
+                        
                         self.rod.write("kill %s\n"%(startfight)) 
                         self.target = startfight
                         self.fight = True
