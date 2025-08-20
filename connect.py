@@ -859,9 +859,6 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                 if "Your stomach cannot contain any more." in l:
                     self.rod.write('drink\n')
 
-                if "Drink what?" in l:
-                    if self.clericon:
-                        self.cleric.rod.write("cast \"create spring\" %s\ntrance\n"%self.name)
                 
                 if int(self.HP) < int(self.MAXHP)*0.4:
                     self.rod.write("flee\nquit\n")
