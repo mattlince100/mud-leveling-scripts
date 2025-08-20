@@ -43,7 +43,7 @@ class Shire:
                     if len(dirs[i]) == 0: continue
                     self.phasedir[i+2] = dirs[i]
 
-            self.cankill = ["A horse becomes"]
+            self.cankill = ["A horse becomes", "A Halfling villager"]
             self.killed = []
 
         elif self.phase >= 2 and not self.fight:
@@ -55,6 +55,7 @@ class Shire:
                         
             
             mobnames = {'A horse becomes':"horse",
+                        "A Halfling villager":"villager",
                         "A chicken sits":"chicken",
                         "A cow is":"cow",
                         "A pig wallows":"pig",

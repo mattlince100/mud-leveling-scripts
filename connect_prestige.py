@@ -995,9 +995,41 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                     if self.charclass == "Cleric" and "celestial might" not in self.aff and self.attack == 'surestrike' and int(self.MP) > 16:
                         self.rod.write("cast 'celestial might'\n")
 
-                    if int(self.MP) > 30 or ( int(self.MP) > 8 and (self.charclass == "Vampire" or self.charclass == "Dread")):
+                    # Smart mana management: Check if we have enough mana for spells
+                    spell_mana_costs = {
+                        'nihil': 15,
+                        'umbral spear': 25, 
+                        'acid blast': 35,
+                        'caustic fount': 20,
+                        'ethereal fist': 18,
+                        'necromantic touch': 12,
+                        'water spout': 20
+                    }
+                    
+                    # Determine minimum mana needed for our current spell
+                    min_mana_needed = 30  # Default minimum
+                    if spell and "cast" in spell:
+                        spell_name = spell.split('"')[1] if '"' in spell else spell.split("'")[1] if "'" in spell else ""
+                        min_mana_needed = spell_mana_costs.get(spell_name.lower(), 30)
+                    
+                    # Emergency mana threshold for high-cost spells
+                    emergency_mana_threshold = 20
+                    
+                    # Check if we need emergency mana (below 20 MP or can't cast our spell)
+                    needs_emergency_mana = (int(self.MP) < emergency_mana_threshold or 
+                                          (spell and int(self.MP) < min_mana_needed))
+                    
+                    # Priority 1: ALWAYS prioritize healing over mana (handled above)
+                    
+                    # Priority 2: Handle emergency mana situation
+                    if needs_emergency_mana and spell != None and self.charclass in ['Mage',"Augurer", "Nephandi", "Cleric","Harbinger"]:
+                        self.printc("EMERGENCY: Low mana (%d MP) for spell, quaffing mana potion!" % int(self.MP), 'red')
+                        self.manaup()  # Force mana quaff for emergency situations
+                    
+                    # Priority 3: Cast spell if we have enough mana, otherwise use physical attack
+                    if int(self.MP) >= min_mana_needed or (int(self.MP) > 8 and (self.charclass == "Vampire" or self.charclass == "Dread")):
                         if spell != None and self.usespell:
-                            self.printc(spell)
+                            self.printc("Casting: %s (MP: %d/%d)" % (spell, int(self.MP), int(self.MAXMP)))
                             self.rod.write(spell+'\n')
                         else:
                             if self.nofeed:
@@ -1006,18 +1038,21 @@ class ROD(dhaven, Gnome, Sunless, Starting, Cleric, Coral, Art, Toz, Mithril, Su
                                 self.rod.write("%s\nstrike\n"%self.attack)
                                 self.printc(self.attack)
                     else:
-                        
+                        # Not enough mana for spells, use proactive mana management
                         if spell != None and self.charclass in ['Mage',"Augurer", "Nephandi", "Cleric","Harbinger"]:
+                            # Intelligent mana quaffing based on class and spell costs
+                            quaff_chance = 0.9  # High chance for reliable mana
                             if self.charclass in ["Fathomer","Harbinger"]:
-                               if self.random.random() < 0.2: 
-                                   self.manaup()
-                            else:
-                                if self.random.random() < 0.7:
-                                   self.manaup()
+                                quaff_chance = 0.4  # Lower for fathomers and harbingers
+                            elif spell and any(high_cost in spell.lower() for high_cost in ['umbral spear', 'acid blast']):
+                                quaff_chance = 1.0  # Always quaff for expensive spells
+                            
+                            if self.random.random() < quaff_chance:
+                                self.manaup()
+                                self.printc("Quaffing mana - MP: %d/%d" % (int(self.MP), int(self.MAXMP)), 'cyan')
 
-                        
-
-                        self.printc(self.attack)
+                        # Use physical attack when low on mana
+                        self.printc("Low mana (%d MP), using: %s" % (int(self.MP), self.attack), 'yellow')
                         self.rod.write("%s\n"%self.attack)
                 self.lag = 1
                 
